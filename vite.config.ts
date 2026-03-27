@@ -5,6 +5,7 @@ import path from 'path';
 const EYE_BALLZ_OUTPUTS = path.resolve(__dirname, '../facetracking/eye-ballz/outputs');
 
 export default defineConfig({
+  publicDir: 'public',
   plugins: [
     {
       name: 'serve-eye-ballz-outputs',
