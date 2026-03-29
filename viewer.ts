@@ -88,41 +88,43 @@ export function initViewer(container: HTMLElement) {
 
   const allSteps = steps.flat();
 
-  async function preload() {
-    const batchSize = 10;
-    for (let i = 0; i < allSteps.length; i += batchSize) {
-      const batch = allSteps.slice(i, i + batchSize);
-      await Promise.all(
-        batch.map(
-          (step) =>
-            new Promise<void>((resolve) => {
-              textureLoader.load(
-                `/outputs/${PREFIX}/${step.filename}`,
-                (tex) => {
-                  tex.colorSpace = SRGBColorSpace;
-                  photoTextures.set(step.filename, tex);
-                  textureLoader.load(
-                    `/outputs/${PREFIX}/depth/${step.filename}.depth.png`,
-                    (depth) => {
-                      depthTextures.set(step.filename, depth);
-                      resolve();
-                    },
-                    undefined,
-                    () => resolve(),
-                  );
-                },
-                undefined,
-                () => resolve(),
-              );
-            }),
-        ),
+  function loadStep(step: { filename: string }): Promise<void> {
+    return new Promise<void>((resolve) => {
+      textureLoader.load(
+        `/outputs/${PREFIX}/${step.filename}`,
+        (tex) => {
+          tex.colorSpace = SRGBColorSpace;
+          photoTextures.set(step.filename, tex);
+          textureLoader.load(
+            `/outputs/${PREFIX}/depth/${step.filename}.depth.png`,
+            (depth) => {
+              depthTextures.set(step.filename, depth);
+              resolve();
+            },
+            undefined,
+            () => resolve(),
+          );
+        },
+        undefined,
+        () => resolve(),
       );
-    }
+    });
+  }
 
-    // Set initial center frame
+  async function preload() {
+    // Load and display the center frame immediately
     const cx = Math.floor(X_STEPS / 2);
     const cy = Math.floor(Y_STEPS / 2);
-    applyTextures(steps[cy][cx].filename);
+    const centerStep = steps[cy][cx];
+    await loadStep(centerStep);
+    applyTextures(centerStep.filename);
+
+    // Load the rest in the background
+    const rest = allSteps.filter((s) => s.filename !== centerStep.filename);
+    const batchSize = 10;
+    for (let i = 0; i < rest.length; i += batchSize) {
+      await Promise.all(rest.slice(i, i + batchSize).map(loadStep));
+    }
   }
 
   preload();
