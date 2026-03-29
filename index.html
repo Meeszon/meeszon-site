@@ -102,7 +102,8 @@
         </div>
         <p class="bio">
           Eindhoven-based ICT & Media Design student at Fontys. Researching what
-          users need, designing the interface, and writing the code to bring it to life.<br /><br />
+          users need, designing the interface, and writing the code to bring it
+          to life.<br /><br />
           I am currently looking for a graduation internship starting September
           2026. Feel free to reach out at
           <a class="email-link" href="mailto:meeszon@gmail.com"
@@ -110,12 +111,18 @@
           >.
         </p>
         <hr class="divider" />
-        <h2 class="ventures-heading">Selected Works</h2>
+        <h2 class="ventures-heading">Projects</h2>
         <div class="ventures-grid">
-          <div class="venture-card">
-            <div class="venture-card-icon"></div>
+          <div class="venture-card" data-project="qarry">
+            <div class="venture-card-icon" style="background: #fde46a">
+              <img
+                src="/images/qarry.png"
+                alt="Qarry"
+                style="width: 100%; height: 100%; object-fit: cover"
+              />
+            </div>
             <div class="venture-card-info">
-              <span class="venture-card-name">Venture One</span>
+              <span class="venture-card-name">Qarry</span>
               <span class="venture-card-year">2025</span>
             </div>
           </div>
@@ -136,6 +143,21 @@
         </div>
       </div>
     </div>
+
+    <div class="modal-backdrop" id="modal-backdrop">
+      <div class="modal" id="modal">
+        <div class="modal-topbar">
+          <span class="modal-project-name" id="modal-project-name"></span>
+          <button class="modal-close" id="modal-close" aria-label="Close">
+            <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+              <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+      </div>
+    </div>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
