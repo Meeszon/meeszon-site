@@ -17,9 +17,10 @@ const SIZE = 112;
 const ROTATE_BOUND = 20;
 const PUPIL_BOUND = 15;
 const PREFIX = "mees";
-const X_STEPS = 25;
-const Y_STEPS = 25;
+const X_STEPS = 20;
+const Y_STEPS = 20;
 const DISPLACEMENT_SCALE = 0.5;
+const PRECISION = 10;
 
 function round(value: number, precision: number) {
   return Math.round(value * precision) / precision;
@@ -30,24 +31,26 @@ const steps = Array.from({ length: Y_STEPS }, (_, y) =>
     const index = y * X_STEPS + x;
     const rotate_yaw = round(
       ROTATE_BOUND * 2 * (x / (X_STEPS - 1)) - ROTATE_BOUND,
-      10,
+      PRECISION,
     );
     const rotate_pitch = round(
       ROTATE_BOUND * 2 * (y / (Y_STEPS - 1)) - ROTATE_BOUND,
-      10,
+      PRECISION,
     );
     const pupil_x = round(
       PUPIL_BOUND * 2 * (x / (X_STEPS - 1)) - PUPIL_BOUND,
-      10,
+      PRECISION,
     );
     const pupil_y = round(
       (PUPIL_BOUND * 2 * (y / (Y_STEPS - 1)) - PUPIL_BOUND) * -1,
-      10,
+      PRECISION,
     );
     const filename = `${PREFIX}_${String(index).padStart(3, "0")}_${x}_${y}_yaw${rotate_yaw}_pitch${rotate_pitch}_px${pupil_x}_py${pupil_y}.webp`;
     return { x, y, filename };
   }),
 );
+
+const allSteps = steps.flat();
 
 export function initViewer(container: HTMLElement) {
   const canvas = document.createElement("canvas");
@@ -74,19 +77,17 @@ export function initViewer(container: HTMLElement) {
 
   container.appendChild(canvas);
 
-  // Preload textures
   const textureLoader = new TextureLoader();
   const photoTextures = new Map<string, Texture>();
   const depthTextures = new Map<string, Texture>();
 
   function applyTextures(filename: string) {
-    if (!photoTextures.has(filename)) return;
-    material.map = photoTextures.get(filename)!;
+    const tex = photoTextures.get(filename);
+    if (!tex) return;
+    material.map = tex;
     material.displacementMap = depthTextures.get(filename) ?? null;
     material.needsUpdate = true;
   }
-
-  const allSteps = steps.flat();
 
   function loadStep(step: { filename: string }): Promise<void> {
     return new Promise<void>((resolve) => {
