@@ -120,12 +120,17 @@ export function initViewer(container: HTMLElement) {
     await loadStep(centerStep);
     applyTextures(centerStep.filename);
 
-    // Load the rest in the background
-    const rest = allSteps.filter((s) => s.filename !== centerStep.filename);
-    const batchSize = 10;
-    for (let i = 0; i < rest.length; i += batchSize) {
-      await Promise.all(rest.slice(i, i + batchSize).map(loadStep));
-    }
+    // Sort remaining frames by distance from center so nearby frames load first
+    const rest = allSteps
+      .filter((s) => s.filename !== centerStep.filename)
+      .sort((a, b) => {
+        const da = (a.x - cx) ** 2 + (a.y - cy) ** 2;
+        const db = (b.x - cx) ** 2 + (b.y - cy) ** 2;
+        return da - db;
+      });
+
+    // Fire all loads in parallel — browser naturally throttles connections
+    rest.forEach((s) => loadStep(s));
   }
 
   preload();
