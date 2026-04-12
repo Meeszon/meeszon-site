@@ -124,6 +124,10 @@ function buildModalContent(data: ProjectData): string {
 
 let carouselDragCleanup: (() => void) | null = null;
 let carouselResizeObserver: ResizeObserver | null = null;
+let lightboxEl: HTMLElement | null = null;
+let isLightboxOpen = false;
+let lightboxNavigate: ((delta: number) => void) | null = null;
+let lightboxCloseFunc: (() => void) | null = null;
 
 function initModalCarousel() {
   const carousel = modalBody.querySelector<HTMLElement>(".modal-carousel");
@@ -196,7 +200,10 @@ function initModalCarousel() {
     { passive: true },
   );
 
-  viewport.addEventListener("touchend", settle);
+  viewport.addEventListener("touchend", () => {
+    if (Math.abs(dragX) < 5) openLightbox(current);
+    else settle();
+  });
 
   // Mouse drag — attaches move/up to window so it survives leaving the element
   viewport.addEventListener("mousedown", (e) => {
@@ -215,7 +222,7 @@ function initModalCarousel() {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
       carouselDragCleanup = null;
-      viewport.style.cursor = "grab";
+      viewport.style.cursor = "zoom-in";
       settle();
     }
 
@@ -227,6 +234,11 @@ function initModalCarousel() {
     };
   });
 
+  // Open lightbox on click; dragX check filters out drags (dragX is set during mousedown)
+  viewport.addEventListener("click", () => {
+    if (Math.abs(dragX) < 5) openLightbox(current);
+  });
+
   // Re-snap on resize (e.g. orientation change on mobile)
   carouselResizeObserver = new ResizeObserver(() => {
     slideWidth = viewport.offsetWidth;
@@ -236,6 +248,68 @@ function initModalCarousel() {
     goTo(current, false);
   });
   carouselResizeObserver.observe(viewport);
+
+  // Lightbox — clicking a slide image opens it full-size
+  const lbDots = Array.from({ length: total }, (_, i) =>
+    `<button class="modal-dot${i === 0 ? " active" : ""}" data-index="${i}" aria-label="Slide ${i + 1}"></button>`,
+  ).join("");
+
+  const lb = document.createElement("div");
+  lb.className = "lightbox";
+  lb.innerHTML = `
+    <div class="lightbox-backdrop"></div>
+    <button class="lightbox-close" aria-label="Close">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="lightbox-inner">
+      ${total > 1 ? `<button class="lightbox-arrow lightbox-prev" aria-label="Previous">
+        <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>` : ""}
+      <img class="lightbox-img" draggable="false" alt="" />
+      ${total > 1 ? `<button class="lightbox-arrow lightbox-next" aria-label="Next">
+        <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>` : ""}
+    </div>
+    ${total > 1 ? `<div class="lightbox-dots">${lbDots}</div>` : ""}
+  `;
+  document.body.appendChild(lb);
+  lightboxEl = lb;
+
+  const lbImg = lb.querySelector<HTMLImageElement>(".lightbox-img")!;
+  const lbDotBtns = lb.querySelectorAll<HTMLButtonElement>(".modal-dot");
+  const lbPrev = lb.querySelector<HTMLButtonElement>(".lightbox-prev");
+  const lbNext = lb.querySelector<HTMLButtonElement>(".lightbox-next");
+  const lbCloseBtn = lb.querySelector<HTMLButtonElement>(".lightbox-close")!;
+  const lbBackdrop = lb.querySelector<HTMLElement>(".lightbox-backdrop")!;
+
+  let lbCurrent = 0;
+
+  function lbGoTo(index: number) {
+    lbCurrent = ((index % total) + total) % total;
+    lbImg.src = slides[lbCurrent].querySelector<HTMLImageElement>("img")!.src;
+    lbDotBtns.forEach((d, i) => d.classList.toggle("active", i === lbCurrent));
+    goTo(lbCurrent, false);
+  }
+
+  function openLightbox(index: number) {
+    lbGoTo(index);
+    lb.classList.add("is-open");
+    isLightboxOpen = true;
+  }
+
+  function closeLightbox() {
+    lb.classList.remove("is-open");
+    isLightboxOpen = false;
+  }
+
+  lightboxNavigate = (delta) => lbGoTo(lbCurrent + delta);
+  lightboxCloseFunc = closeLightbox;
+
+  lbPrev?.addEventListener("click", () => lbGoTo(lbCurrent - 1));
+  lbNext?.addEventListener("click", () => lbGoTo(lbCurrent + 1));
+  lbCloseBtn.addEventListener("click", closeLightbox);
+  lbBackdrop.addEventListener("click", closeLightbox);
+  lbDotBtns.forEach((dot, i) => dot.addEventListener("click", () => lbGoTo(i)));
 }
 
 function openModal(project: string, card: HTMLElement) {
@@ -280,6 +354,11 @@ function openModal(project: string, card: HTMLElement) {
 }
 
 function closeModal() {
+  lightboxCloseFunc?.();
+  lightboxCloseFunc = null;
+  lightboxNavigate = null;
+  lightboxEl?.remove();
+  lightboxEl = null;
   carouselDragCleanup?.();
   carouselDragCleanup = null;
   carouselResizeObserver?.disconnect();
@@ -309,6 +388,12 @@ backdrop.addEventListener("click", (e) => {
   if (e.target === backdrop) closeModal();
 });
 document.addEventListener("keydown", (e) => {
+  if (isLightboxOpen) {
+    if (e.key === "Escape") { lightboxCloseFunc?.(); return; }
+    if (e.key === "ArrowLeft") { lightboxNavigate?.(-1); return; }
+    if (e.key === "ArrowRight") { lightboxNavigate?.(1); return; }
+    return;
+  }
   if (e.key === "Escape") closeModal();
 });
 
