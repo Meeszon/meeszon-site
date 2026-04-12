@@ -8,6 +8,11 @@
   --border-radius: 8px;
 }
 
+::selection {
+  background: rgba(180, 72, 54, 0.18);
+  color: var(--color-text);
+}
+
 *,
 *::before,
 *::after {
@@ -266,25 +271,31 @@ h1 {
   flex: 1;
   height: 210px;
   border-radius: var(--border-radius);
-  background: #e5dfd7;
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  transition: background 0.15s ease;
   cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background 0.18s ease;
 }
 
 .venture-card:hover {
-  background: #e9e3dc;
+  background: var(--color-surface-hover);
+}
+
+.venture-card:active {
+  background: #d9d3ca;
 }
 
 .venture-card-icon {
   width: 84px;
   height: 84px;
   border-radius: var(--border-radius);
-  background: rgba(26, 20, 16, 0.08);
+  background: rgba(26, 20, 16, 0.07);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,7 +340,7 @@ h1 {
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.3s ease;
   z-index: 100;
 }
 
@@ -339,6 +350,9 @@ h1 {
 }
 
 .modal {
+  --card-x: 0px;
+  --card-y: 0px;
+  --card-scale: 0.3;
   width: 660px;
   max-height: 80vh;
   background: var(--color-bg);
@@ -349,17 +363,47 @@ h1 {
   border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  transform: scale(0.96) translateY(8px);
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
-    opacity 0.25s ease;
-  opacity: 0;
   overflow: hidden;
+  opacity: 0;
+  transform: translate(var(--card-x), var(--card-y)) scale(var(--card-scale));
 }
 
-.modal-backdrop.open .modal {
-  transform: scale(1) translateY(0);
-  opacity: 1;
+.modal.is-open {
+  animation: modal-open 0.48s cubic-bezier(0.34, 1.1, 0.64, 1) forwards;
+}
+
+.modal.is-closing {
+  animation: modal-close 0.24s ease forwards;
+}
+
+@keyframes modal-open {
+  from {
+    opacity: 0;
+    transform: translate(var(--card-x), var(--card-y)) scale(var(--card-scale));
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes modal-close {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(0, 14px) scale(0.96);
+  }
+}
+
+/* Modal content fades in after modal lands */
+.modal.is-open .modal-content-inner {
+  animation: fade-up 0.3s 0.18s ease both;
 }
 
 .modal-topbar {
@@ -423,6 +467,10 @@ h1 {
   overflow-y: auto;
   flex: 1;
   padding: 0;
+}
+
+.modal.is-animating .modal-body {
+  overflow-y: hidden;
 }
 
 .modal-content-inner {
@@ -543,10 +591,126 @@ h1 {
   opacity: 0.75;
 }
 
-.modal-gallery {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+/* Carousel */
+.modal-carousel {
+  position: relative;
+}
+
+.modal-carousel-viewport {
+  overflow: hidden;
+  width: 100%;
+  cursor: grab;
+  border-radius: 6px;
+}
+
+.modal-carousel-viewport:active {
+  cursor: grabbing;
+}
+
+.modal-carousel-track {
+  display: flex;
+  will-change: transform;
+  user-select: none;
+}
+
+.modal-carousel-slide {
+  flex: 0 0 auto;
+  /* width set by JS to viewport.offsetWidth */
+  background: #f2ede8;
+}
+
+.modal-carousel-slide img {
+  width: 100%;
+  height: 260px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  border-radius: 6px;
+}
+
+.modal-carousel-arrow {
+  position: absolute;
+  top: 130px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 2;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.modal-carousel:hover .modal-carousel-arrow {
+  opacity: 0.4;
+}
+
+.modal-carousel-arrow:hover {
+  opacity: 1 !important;
+}
+
+.modal-carousel-prev {
+  left: 10px;
+}
+.modal-carousel-next {
+  right: 10px;
+}
+
+.modal-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 0;
+}
+
+/* Tick marks — button is tall for hit target, ::after is the visible line */
+.modal-dot {
+  width: 14px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  flex-shrink: 0;
+  transition: width 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.modal-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(26, 20, 16, 0.16);
+  transform: translateY(-50%);
+  transition: background 0.22s ease;
+}
+
+.modal-dot.active {
+  width: 24px;
+}
+
+.modal-dot.active::after {
+  background: rgba(26, 20, 16, 0.5);
+}
+
+.modal-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 16px 28px 22px;
 }
 
 .modal-gallery img {
