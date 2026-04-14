@@ -23,12 +23,28 @@ const projectContent: Record<string, ProjectData> = {
       '<a href="https://multirotorresearch.com/" target="_blank" class="email-link">MRR Drones</a> builds autonomous drone flight software. I am currently redesigning and developing the front-end for their application, overhauling the user flows to make them intuitive and easy to use, particularly on small screens like the DJI Remote.',
     gallery: ["/images/mrrshowcase/0.png", "/images/mrrshowcase/1.png"],
   },
+  bathforge: {
+    name: "Bathforge",
+    status: "shipped",
+    role: "Developer",
+    product: "Web App",
+    timeline: "Sep – Dec 2025",
+    tools: ["React", "Three.js", "Java", "Spring Boot"],
+    description:
+      "A 3D bathroom configurator built for New Living Design GmbH. Users input the dimensions of their bathroom and the app generates a Three.js room. Products from the catalogue can then be placed, moved, and styled inside the space.",
+    gallery: [
+      "/images/newlivingshowcase/0.png",
+      "/images/newlivingshowcase/1.png",
+      "/images/newlivingshowcase/2.png",
+      "/images/newlivingshowcase/3.png",
+    ],
+  },
   qarry: {
     name: "Qarry",
     status: "shipped",
     role: "Designer & Developer",
     product: "Web App",
-    timeline: "Jan – Apr 2025",
+    timeline: "Jan – Jul 2025",
     tools: ["Figma", "React", "Tailwind", "Laravel"],
     description:
       'A fully deployed fleet management dashboard for <a href="https://qarry.com" target="_blank" class="email-link">Qarry</a>. Features real-time fleet tracking, detailed individual vehicle telemetry (trip history, battery, speed, etc.), and high-level data insights for in-house teams and customers.',
