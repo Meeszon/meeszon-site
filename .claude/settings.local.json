@@ -3,7 +3,13 @@
     "allow": [
       "WebFetch(domain:nils.io)",
       "mcp__figma__get_design_context",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(grep -E '\\\\.\\(ts|tsx|css|scss|html|json\\)$')",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(pnpm vite:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

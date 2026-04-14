@@ -111,11 +111,15 @@ body {
   display: flex;
 }
 
-#viewer canvas {
-  display: block;
+#viewer .face-tracker {
+  min-height: unset;
+  background: transparent;
+  cursor: default;
   border-radius: var(--border-radius);
-  border: none;
-  outline: none;
+}
+
+#viewer .face-image {
+  border-radius: var(--border-radius);
 }
 
 .wave-icon {
@@ -342,6 +346,7 @@ h1 {
   pointer-events: none;
   transition: opacity 0.3s ease;
   z-index: 100;
+  will-change: backdrop-filter;
 }
 
 .modal-backdrop.open {
@@ -369,7 +374,7 @@ h1 {
 }
 
 .modal.is-open {
-  animation: modal-open 0.48s cubic-bezier(0.34, 1.1, 0.64, 1) forwards;
+  animation: modal-open 0.32s cubic-bezier(0.34, 1.1, 0.64, 1) forwards;
 }
 
 .modal.is-closing {
@@ -403,7 +408,7 @@ h1 {
 
 /* Modal content fades in after modal lands */
 .modal.is-open .modal-content-inner {
-  animation: fade-up 0.3s 0.18s ease both;
+  animation: fade-up 0.3s 0.12s ease both;
 }
 
 .modal-topbar {
@@ -464,13 +469,9 @@ h1 {
 }
 
 .modal-body {
-  overflow-y: auto;
+  overflow-y: hidden;
   flex: 1;
   padding: 0;
-}
-
-.modal.is-animating .modal-body {
-  overflow-y: hidden;
 }
 
 .modal-content-inner {
