@@ -9,7 +9,8 @@
       "Bash(pnpm add:*)",
       "Bash(pnpm exec:*)",
       "Bash(pnpm vite:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

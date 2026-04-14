@@ -132,13 +132,11 @@ body {
   transform-origin: 50% 80%;
   cursor: pointer;
   user-select: none;
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .wave-icon:hover {
-  transform: translate(8px, -8px) rotate(8deg) scale(1.1);
+  transform: translate(8px, -8px) rotate(8deg);
 }
 
 .wave-icon path {
@@ -406,10 +404,6 @@ h1 {
   }
 }
 
-/* Modal content fades in after modal lands */
-.modal.is-open .modal-content-inner {
-  animation: fade-up 0.3s 0.12s ease both;
-}
 
 .modal-topbar {
   display: flex;
