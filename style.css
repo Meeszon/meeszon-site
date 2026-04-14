@@ -750,15 +750,14 @@ h1 {
 .lightbox-inner {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 16px;
 }
 
 .lightbox-arrow {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -769,7 +768,11 @@ h1 {
   color: rgba(242, 237, 232, 0.6);
   transition: background 0.15s ease, color 0.15s ease;
   padding: 0;
+  z-index: 2;
 }
+
+.lightbox-prev { left: 32px; }
+.lightbox-next { right: 32px; }
 
 .lightbox-arrow:hover {
   background: rgba(242, 237, 232, 0.18);

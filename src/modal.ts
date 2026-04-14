@@ -12,6 +12,16 @@ interface ProjectData {
 }
 
 const projectContent: Record<string, ProjectData> = {
+  mrr: {
+    name: "MRR Drones",
+    status: "wip",
+    role: "Designer & Developer",
+    product: "Web App",
+    timeline: "Feb 2026 – Present",
+    tools: ["Figma", "React", "SCSS", "UX Research"],
+    description:
+      '<a href="https://multirotorresearch.com/" target="_blank" class="email-link">MRR Drones</a> builds autonomous drone flight software. I am currently redesigning and developing the front-end for their application, overhauling the user flows to make them intuitive and easy to use, particularly on small screens like the DJI Remote.',
+  },
   qarry: {
     name: "Qarry",
     status: "shipped",
@@ -119,12 +129,20 @@ function initModalCarousel() {
   const carousel = modalBody.querySelector<HTMLElement>(".modal-carousel");
   if (!carousel) return;
 
-  const viewport = carousel.querySelector<HTMLElement>(".modal-carousel-viewport")!;
+  const viewport = carousel.querySelector<HTMLElement>(
+    ".modal-carousel-viewport",
+  )!;
   const track = carousel.querySelector<HTMLElement>(".modal-carousel-track")!;
-  const slides = Array.from(carousel.querySelectorAll<HTMLElement>(".modal-carousel-slide"));
+  const slides = Array.from(
+    carousel.querySelectorAll<HTMLElement>(".modal-carousel-slide"),
+  );
   const allDots = carousel.querySelectorAll<HTMLButtonElement>(".modal-dot");
-  const prevBtn = carousel.querySelector<HTMLButtonElement>(".modal-carousel-prev")!;
-  const nextBtn = carousel.querySelector<HTMLButtonElement>(".modal-carousel-next")!;
+  const prevBtn = carousel.querySelector<HTMLButtonElement>(
+    ".modal-carousel-prev",
+  )!;
+  const nextBtn = carousel.querySelector<HTMLButtonElement>(
+    ".modal-carousel-next",
+  )!;
 
   let current = 0;
   const total = slides.length;
@@ -141,7 +159,9 @@ function initModalCarousel() {
   loadSlide(1);
 
   let slideWidth = viewport.offsetWidth;
-  slides.forEach((s) => { s.style.width = `${slideWidth}px`; });
+  slides.forEach((s) => {
+    s.style.width = `${slideWidth}px`;
+  });
 
   function goTo(index: number, animate = true) {
     current = ((index % total) + total) % total;
@@ -168,16 +188,24 @@ function initModalCarousel() {
   nextBtn.addEventListener("click", () => goTo(current + 1));
   allDots.forEach((dot, i) => dot.addEventListener("click", () => goTo(i)));
 
-  viewport.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
-    dragX = 0;
-    track.style.transition = "none";
-  }, { passive: true });
+  viewport.addEventListener(
+    "touchstart",
+    (e) => {
+      startX = e.touches[0].clientX;
+      dragX = 0;
+      track.style.transition = "none";
+    },
+    { passive: true },
+  );
 
-  viewport.addEventListener("touchmove", (e) => {
-    dragX = e.touches[0].clientX - startX;
-    track.style.transform = `translateX(${-current * slideWidth + dragX}px)`;
-  }, { passive: true });
+  viewport.addEventListener(
+    "touchmove",
+    (e) => {
+      dragX = e.touches[0].clientX - startX;
+      track.style.transform = `translateX(${-current * slideWidth + dragX}px)`;
+    },
+    { passive: true },
+  );
 
   viewport.addEventListener("touchend", () => {
     if (Math.abs(dragX) < 5) openLightbox(current);
@@ -218,7 +246,9 @@ function initModalCarousel() {
 
   carouselResizeObserver = new ResizeObserver(() => {
     slideWidth = viewport.offsetWidth;
-    slides.forEach((s) => { s.style.width = `${slideWidth}px`; });
+    slides.forEach((s) => {
+      s.style.width = `${slideWidth}px`;
+    });
     goTo(current, false);
   });
   carouselResizeObserver.observe(viewport);
@@ -237,13 +267,21 @@ function initModalCarousel() {
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
     <div class="lightbox-inner">
-      ${total > 1 ? `<button class="lightbox-arrow lightbox-prev" aria-label="Previous">
+      ${
+        total > 1
+          ? `<button class="lightbox-arrow lightbox-prev" aria-label="Previous">
         <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>` : ""}
+      </button>`
+          : ""
+      }
       <img class="lightbox-img" draggable="false" alt="" />
-      ${total > 1 ? `<button class="lightbox-arrow lightbox-next" aria-label="Next">
+      ${
+        total > 1
+          ? `<button class="lightbox-arrow lightbox-next" aria-label="Next">
         <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>` : ""}
+      </button>`
+          : ""
+      }
     </div>
     ${total > 1 ? `<div class="lightbox-dots">${lbDots}</div>` : ""}
   `;
@@ -354,9 +392,13 @@ function closeModal() {
 }
 
 export function initModal() {
-  document.querySelectorAll<HTMLElement>(".venture-card[data-project]").forEach((card) => {
-    card.addEventListener("click", () => openModal(card.dataset.project!, card));
-  });
+  document
+    .querySelectorAll<HTMLElement>(".venture-card[data-project]")
+    .forEach((card) => {
+      card.addEventListener("click", () =>
+        openModal(card.dataset.project!, card),
+      );
+    });
 
   modalClose.addEventListener("click", closeModal);
 
@@ -366,9 +408,18 @@ export function initModal() {
 
   document.addEventListener("keydown", (e) => {
     if (isLightboxOpen) {
-      if (e.key === "Escape") { lightboxCloseFunc?.(); return; }
-      if (e.key === "ArrowLeft") { lightboxNavigate?.(-1); return; }
-      if (e.key === "ArrowRight") { lightboxNavigate?.(1); return; }
+      if (e.key === "Escape") {
+        lightboxCloseFunc?.();
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        lightboxNavigate?.(-1);
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        lightboxNavigate?.(1);
+        return;
+      }
       return;
     }
     if (e.key === "Escape") closeModal();
