@@ -330,6 +330,53 @@ h1 {
   color: var(--color-muted);
 }
 
+/* Scrollbars */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+  border-radius: 999px;
+  opacity: 0.5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7a6e63;
+}
+
+.modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(158, 144, 130, 0.45) transparent;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: rgba(158, 144, 130, 0.45);
+  border-radius: 999px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 110, 99, 0.7);
+}
+
 /* Modal */
 .modal-backdrop {
   position: fixed;
@@ -463,7 +510,7 @@ h1 {
 }
 
 .modal-body {
-  overflow-y: hidden;
+  overflow-y: auto;
   flex: 1;
   padding: 0;
 }
@@ -820,4 +867,157 @@ h1 {
 
 .lightbox .modal-dot.active::after {
   background: rgba(242, 237, 232, 0.75);
+}
+
+/* Mobile social links hidden by default — shown below bio on small screens */
+.social-links-bio {
+  display: none;
+}
+
+/* ── 640px: container goes fluid, cards/modal go responsive ── */
+@media (max-width: 640px) {
+  .container {
+    width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 60px;
+    padding-bottom: 48px;
+  }
+
+  .bio {
+    margin-top: 32px;
+    letter-spacing: 1.5px;
+  }
+
+  .divider {
+    margin-top: 32px;
+  }
+
+  .ventures-heading {
+    margin-top: 40px;
+    font-size: 28px;
+  }
+
+  .ventures-grid {
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .venture-card {
+    flex: 0 0 calc(50% - 8px);
+  }
+
+  .modal {
+    max-width: calc(100vw - 40px);
+    max-height: 90vh;
+  }
+
+  .modal-body {
+    overflow-y: auto;
+  }
+
+  .modal-meta {
+    padding: 12px 16px;
+  }
+
+  .modal-lower {
+    padding: 16px 16px 20px;
+  }
+
+  .modal-tech {
+    padding: 10px 16px 16px;
+  }
+
+  .modal-carousel-slide img {
+    height: 200px;
+  }
+
+  .modal-carousel-arrow {
+    top: 100px;
+  }
+
+  /* Lightbox arrows move above the image */
+  .lightbox-arrow {
+    position: absolute;
+    top: -52px;
+    transform: none;
+  }
+
+  .lightbox-prev { left: 0; }
+  .lightbox-next { right: 0; }
+
+  .lightbox-img {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 140px);
+  }
+}
+
+/* ── 500px: hero rescales, social buttons move below bio ── */
+@media (max-width: 500px) {
+  /* h1 and portrait stay on one horizontal line, vertically centered */
+  .hero {
+    align-items: center;
+  }
+
+  .hero-right {
+    margin-top: 0;
+  }
+
+  /* Hide social buttons from hero — they reappear below the bio */
+  .hero-right .social-links {
+    display: none;
+  }
+
+  /* Social links row shown below bio */
+  .social-links-bio {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  /* 38px × 2 lines × 1.15 line-height ≈ 87.4px ≈ portrait height (88px) */
+  h1 {
+    font-size: 38px;
+    margin-top: 0;
+  }
+
+  /* Wave icon: reduced size and offset to sit close to "Hi there!" */
+  .wave-icon {
+    width: 30px;
+    height: 30px;
+    transform: translate(3px, -3px) rotate(8deg);
+  }
+
+  .wave-icon:hover {
+    transform: translate(3px, -3px) rotate(8deg);
+  }
+
+  @keyframes wave-click {
+    0%   { transform: translate(3px, -3px) rotate(8deg); }
+    15%  { transform: translate(3px, -3px) rotate(26deg); }
+    35%  { transform: translate(3px, -3px) rotate(-4deg); }
+    55%  { transform: translate(3px, -3px) rotate(22deg); }
+    75%  { transform: translate(3px, -3px) rotate(2deg); }
+    100% { transform: translate(3px, -3px) rotate(8deg); }
+  }
+
+  #viewer {
+    width: 88px;
+    height: 88px;
+  }
+}
+
+/* ── 400px: timeline hidden, role gets more flex space ── */
+@media (max-width: 400px) {
+  .modal-meta-item:nth-child(3) {
+    display: none;
+  }
+
+
+}
+
+@media (max-width: 345px) {
+  .wave-icon {
+    display: none;
+  }
 }

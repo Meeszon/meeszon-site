@@ -21,6 +21,7 @@ const projectContent: Record<string, ProjectData> = {
     tools: ["Figma", "React", "SCSS", "UX Research"],
     description:
       '<a href="https://multirotorresearch.com/" target="_blank" class="email-link">MRR Drones</a> builds autonomous drone flight software. I am currently redesigning and developing the front-end for their application, overhauling the user flows to make them intuitive and easy to use, particularly on small screens like the DJI Remote.',
+    gallery: ["/images/mrrshowcase/0.png", "/images/mrrshowcase/1.png"],
   },
   qarry: {
     name: "Qarry",

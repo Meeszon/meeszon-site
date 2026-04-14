@@ -10,7 +10,9 @@
       "Bash(pnpm exec:*)",
       "Bash(pnpm vite:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(grep -E \"\\\\.\\(css|html|ts|tsx|js|jsx\\)$\")",
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")"
     ]
   }
 }
