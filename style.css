@@ -305,10 +305,34 @@ h1 {
   overflow: hidden;
 }
 
-.venture-card-icon img {
+.venture-card-icon svg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: block;
+}
+
+.venture-card-icon .logo-bg {
+  fill: #dbd5ce;
+  transition: fill 0.4s ease;
+}
+
+.venture-card:hover .venture-card-icon .logo-bg {
+  fill: var(--logo-color);
+}
+
+.venture-card-icon svg path:not(.logo-bg),
+.venture-card-icon svg rect:not(.logo-bg) {
+  fill: #555550;
+  transition: fill 0.4s ease;
+}
+
+.venture-card:hover .venture-card-icon svg path:not(.logo-bg),
+.venture-card:hover .venture-card-icon svg rect:not(.logo-bg) {
+  fill: white;
+}
+
+.venture-card[data-project="qarry"]:hover .venture-card-icon svg path:not(.logo-bg) {
+  fill: #222222;
 }
 
 .venture-card-info {
