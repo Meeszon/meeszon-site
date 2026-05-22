@@ -12,7 +12,22 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npx tsc:*)",
       "Bash(grep -E \"\\\\.\\(css|html|ts|tsx|js|jsx\\)$\")",
-      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
+      "Bash(powershell *)",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "PowerShell(npx vite build 2>&1 | Select-Object -Last 40)",
+      "PowerShell(pnpm install *)",
+      "PowerShell(npm install *)",
+      "PowerShell(npx vite build 2>&1 | Select-Object -Last 30)",
+      "PowerShell(npx vite --port 5180 --strictPort 2>&1)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o nul -w \"HTTP %{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(curl -s http://localhost:5173/src/modal.ts)",
+      "Bash(curl -s http://localhost:5173/style.css)",
+      "Bash(curl -s -o nul -w \"5174 HTTP %{http_code}\\\\n\" http://localhost:5174/)",
+      "Bash(curl -s http://localhost:5174/)",
+      "Bash(curl -s \"http://localhost:5174/src/modal.ts\")"
     ]
   }
 }

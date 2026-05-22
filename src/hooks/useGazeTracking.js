@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const P_MIN = -15;
-const P_MAX = 15;
-const STEP = 2.5;
-const SIZE = 256;
+export const P_MIN = -15;
+export const P_MAX = 15;
+export const STEP = 2.5;
+export const SIZE = 256;
 
 function quantizeToGrid(val) {
   const raw = P_MIN + (val + 1) * (P_MAX - P_MIN) / 2;
@@ -11,7 +11,7 @@ function quantizeToGrid(val) {
   return Math.max(P_MIN, Math.min(P_MAX, snapped));
 }
 
-function gridToFilename(px, py) {
+export function gridToFilename(px, py) {
   // Python formats floats as "0.0", "5.0" etc. — must match that format.
   const sanitize = (val) => {
     const str = Number.isInteger(val) ? val.toFixed(1) : val.toString();

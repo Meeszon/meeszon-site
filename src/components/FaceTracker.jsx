@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import useGazeTracking from '../hooks/useGazeTracking';
+import usePreloadGazeFrames from '../hooks/usePreloadGazeFrames';
 import './FaceTracker.css';
 
 const imageStyle = {
@@ -12,6 +13,7 @@ const imageStyle = {
 export default function FaceTracker({ className = '', basePath = '/faces/', showDebug = false }) {
   const containerRef = useRef(null);
   const { currentImage } = useGazeTracking(containerRef, basePath);
+  usePreloadGazeFrames(basePath);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   return (
