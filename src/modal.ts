@@ -5,6 +5,8 @@
      restore flies it back out.
    ─────────────────────────────────────────────────────────────────────── */
 
+import { caseStudies } from "./case-studies";
+
 type ProjectStatus = "shipped" | "wip" | "archived";
 
 interface ProjectData {
@@ -45,18 +47,23 @@ const projectContent: Record<string, ProjectData> = {
     role: "Designer & Developer",
     product: "Web App",
     timeline: "Jan – Jul 2025",
-    tools: ["Figma", "React", "Tailwind", "Laravel"],
+    tools: ["Figma", "React", "Tailwind", "Shadcn", "Laravel", "Inertia"],
     description:
-      "A fully deployed fleet management dashboard for Qarry. Features real-time fleet tracking, detailed individual vehicle telemetry (trip history, battery, speed, etc.), and high-level data insights for in-house teams and customers.",
+      "A fleet management dashboard for Qarry. Live tracking across 240 vehicles, per-vehicle telemetry from ~45 on-board data points (trip history, battery, cell temps, voltage usage), and fleet analytics split into a customer view and a deeper in-house view.",
     descriptionLink: { text: "Qarry", href: "https://qarry.com" },
     gallery: [
       "/images/qarryshowcase/0.png",
-      "/images/qarryshowcase/1.png",
+      "/images/qarryshowcase/design-list.jpg",
+      "/images/qarryshowcase/design-maplist.jpg",
+      "/images/qarryshowcase/design-infomap.jpg",
+      "/images/qarryshowcase/design-highfidelity.jpg",
       "/images/qarryshowcase/2.png",
-      "/images/qarryshowcase/3.png",
       "/images/qarryshowcase/4.png",
       "/images/qarryshowcase/5.png",
       "/images/qarryshowcase/6.png",
+      "/images/qarryshowcase/vehicledrawing.png",
+      "/images/qarryshowcase/mobile1.png",
+      "/images/qarryshowcase/mobile2.png",
     ],
     slug: "qarry",
     logoColor: "#fce36a",
@@ -334,6 +341,7 @@ class BrowserWindow {
     windowsLayer.appendChild(this.node);
     this.setupDrag();
     this.setupCarousel();
+    this.setupCaseStudy();
 
     WindowManager.zCounter += 1;
     this.node.style.zIndex = String(WindowManager.zCounter);
@@ -346,17 +354,20 @@ class BrowserWindow {
     node.className = "win";
     node.dataset.key = this.key;
 
-    const slides = (d.gallery || []).map((src, i) =>
+    const caseStudyFn = caseStudies[this.key];
+    const hasCaseStudy = typeof caseStudyFn === "function";
+
+    const slides = !hasCaseStudy ? (d.gallery || []).map((src, i) =>
       `<div class="win-carousel-slide">
         <img ${i === 0 ? `src="${src}"` : `data-src="${src}"`} alt="Screenshot ${i + 1}" draggable="false" />
       </div>`
-    ).join("");
+    ).join("") : "";
 
-    const dots = (d.gallery || []).map((_, i) =>
+    const dots = !hasCaseStudy ? (d.gallery || []).map((_, i) =>
       `<button class="modal-dot${i === 0 ? " active" : ""}" data-index="${i}" aria-label="Slide ${i + 1}"></button>`
-    ).join("");
+    ).join("") : "";
 
-    const carouselHTML = (d.gallery && d.gallery.length)
+    const carouselHTML = (!hasCaseStudy && d.gallery && d.gallery.length)
       ? `<div class="win-carousel">
           <div class="win-carousel-viewport">
             <div class="win-carousel-track">${slides}</div>
@@ -381,6 +392,29 @@ class BrowserWindow {
 
     const slug = d.slug;
     const imageCount = (d.gallery && d.gallery.length) || 0;
+
+    const shortBodyHTML = `
+      <div class="modal-meta">
+        <div class="modal-meta-item">
+          <span class="modal-meta-label">Role</span>
+          <span class="modal-meta-value">${d.role}</span>
+        </div>
+        <div class="modal-meta-item">
+          <span class="modal-meta-label">Product</span>
+          <span class="modal-meta-value">${d.product}</span>
+        </div>
+        <div class="modal-meta-item">
+          <span class="modal-meta-label">Timeline</span>
+          <span class="modal-meta-value">${d.timeline}</span>
+        </div>
+      </div>
+      <div class="modal-lower">
+        <p class="modal-description">${desc}</p>
+        ${carouselHTML}
+        <div class="modal-tags">${toolTags}</div>
+      </div>
+    `;
+    const bodyInner = hasCaseStudy ? caseStudyFn() : shortBodyHTML;
 
     node.innerHTML = `
       <div class="win-titlebar">
@@ -416,27 +450,9 @@ class BrowserWindow {
           </svg>
         </button>
       </div>
-      <div class="win-body">
+      <div class="win-body${hasCaseStudy ? " win-body--case-study" : ""}">
         <div class="win-content">
-          <div class="modal-meta">
-            <div class="modal-meta-item">
-              <span class="modal-meta-label">Role</span>
-              <span class="modal-meta-value">${d.role}</span>
-            </div>
-            <div class="modal-meta-item">
-              <span class="modal-meta-label">Product</span>
-              <span class="modal-meta-value">${d.product}</span>
-            </div>
-            <div class="modal-meta-item">
-              <span class="modal-meta-label">Timeline</span>
-              <span class="modal-meta-value">${d.timeline}</span>
-            </div>
-          </div>
-          <div class="modal-lower">
-            <p class="modal-description">${desc}</p>
-            ${carouselHTML}
-            <div class="modal-tags">${toolTags}</div>
-          </div>
+          ${bodyInner}
         </div>
       </div>
       <div class="win-status">
@@ -606,6 +622,76 @@ class BrowserWindow {
       this.x = 0; this.y = 0;
       this.applyPosition();
       this.node.dataset.maxed = "1";
+    }
+  }
+
+  private setupCaseStudy() {
+    const cs = this.node.querySelector<HTMLElement>(".case-study");
+    if (!cs) return;
+    const body = this.node.querySelector<HTMLElement>(".win-body");
+    if (!body) return;
+
+    // TOC scroll-jumps (anchor links scroll the body, not the page)
+    cs.querySelectorAll<HTMLAnchorElement>("[data-cs-jump]").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const target = cs.querySelector<HTMLElement>(link.getAttribute("href")!);
+        if (!target) return;
+        const toc = cs.querySelector<HTMLElement>(".cs-toc");
+        const tocH = toc ? toc.getBoundingClientRect().height : 0;
+        const offsetTop = target.offsetTop - tocH - 8;
+        body.scrollTo({ top: offsetTop, behavior: "smooth" });
+      });
+    });
+
+    // Highlight current section in TOC as we scroll
+    const sections = Array.from(cs.querySelectorAll<HTMLElement>(".cs-section, .cs-hero"));
+    const tocLinks = Array.from(cs.querySelectorAll<HTMLAnchorElement>("[data-cs-jump]"));
+    const linkFor = (id: string) => tocLinks.find((l) => l.getAttribute("href") === "#" + id);
+    let activeId: string | null = null;
+    const updateActive = () => {
+      const toc = cs.querySelector<HTMLElement>(".cs-toc");
+      const tocH = toc ? toc.getBoundingClientRect().height : 0;
+      const probe = body.scrollTop + tocH + 24;
+      let current: string | null = null;
+      for (const s of sections) {
+        if (s.offsetTop <= probe) current = s.id || null;
+      }
+      if (current !== activeId) {
+        activeId = current;
+        tocLinks.forEach((l) => l.classList.remove("is-active"));
+        if (activeId) linkFor(activeId)?.classList.add("is-active");
+      }
+    };
+    body.addEventListener("scroll", updateActive, { passive: true });
+    requestAnimationFrame(updateActive);
+
+    // Clickable case-study images → lightbox
+    const csImgs = Array.from(cs.querySelectorAll<HTMLImageElement>(
+      ".cs-laptop-screen img, .cs-screen-frame img"
+    ));
+    if (csImgs.length) {
+      const slideEls = csImgs.map((img) => {
+        const slide = document.createElement("div");
+        const inner = document.createElement("img");
+        inner.src = img.src;
+        slide.appendChild(inner);
+        (slide as HTMLElement & { _sourceImg?: HTMLImageElement })._sourceImg = img;
+        return slide;
+      });
+      csImgs.forEach((img, idx) => {
+        img.style.cursor = "zoom-in";
+        img.addEventListener("click", (e) => {
+          e.stopPropagation();
+          // Refresh src in case lazy-loaded after first build
+          slideEls.forEach((s) => {
+            const liveSrc = (s as HTMLElement & { _sourceImg?: HTMLImageElement })._sourceImg?.src;
+            const innerImg = s.querySelector<HTMLImageElement>("img");
+            if (liveSrc && innerImg) innerImg.src = liveSrc;
+          });
+          this.openLightbox(slideEls, idx);
+        });
+      });
     }
   }
 
