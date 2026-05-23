@@ -13,10 +13,55 @@
     />
     <link rel="stylesheet" href="./style.css" />
   </head>
-  <body class="has-chrome-bar no-statusbar no-shadows">
+  <body class="has-chrome-bar no-statusbar no-shadows home-maximized">
+    <!-- Win7 desktop backdrop (visible when home window is windowed / minimized / closed) -->
+    <div class="win7-desktop" aria-hidden="true"></div>
+
+    <!-- Desktop shortcut — restores the home window via double-click -->
+    <div class="desktop-shortcut" id="desktop-shortcut" hidden>
+      <button class="desktop-shortcut-btn" type="button" aria-label="meeszon.com">
+        <span class="desktop-shortcut-icon" aria-hidden="true">
+          <svg class="desktop-shortcut-svg" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ds-bg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#5fa6ee"/>
+                <stop offset="0.5" stop-color="#2a6cc4"/>
+                <stop offset="1" stop-color="#163e85"/>
+              </linearGradient>
+              <linearGradient id="ds-gloss" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff" stop-opacity="0.55"/>
+                <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- Tile -->
+            <rect x="1" y="1" width="46" height="46" rx="3" fill="url(#ds-bg)" stroke="#0c2a5c" stroke-width="1.5"/>
+            <!-- Aero-style glassy highlight across the top half -->
+            <rect x="2" y="2" width="44" height="20" rx="2" fill="url(#ds-gloss)"/>
+            <!-- Bold sans M, smooth Win7-style letterform -->
+            <text
+              x="24" y="36"
+              text-anchor="middle"
+              font-family="Tahoma, 'Segoe UI', Verdana, sans-serif"
+              font-size="32"
+              font-weight="700"
+              fill="#fff"
+            >M</text>
+          </svg>
+        </span>
+        <span class="desktop-shortcut-label">meeszon.com</span>
+      </button>
+    </div>
+
+    <!-- Home window: chrome bar + page body, together act as a single browser window -->
+    <div class="home-window" id="home-window">
     <!-- Browser chrome bar — tabs are the page nav -->
     <div class="chrome-bar" id="chrome-bar">
       <div class="chrome-row chrome-row-tabs">
+        <div class="chrome-lights" aria-label="Home window controls">
+          <button class="chrome-light chrome-light--close" data-act="home-close" type="button" aria-label="Close"></button>
+          <button class="chrome-light chrome-light--minimize" data-act="home-minimize" type="button" aria-label="Minimize"></button>
+          <button class="chrome-light chrome-light--maximize" data-act="home-maximize" type="button" aria-label="Toggle maximize"></button>
+        </div>
         <div class="chrome-tabs" id="chrome-tabs">
           <div class="chrome-tab home active" data-key="home" tabindex="0">
             <span class="chrome-tab-favicon home-fav">M</span>
@@ -234,8 +279,7 @@
       </div>
     </div>
 
-    <!-- Floating windows layer -->
-    <div id="windows-layer"></div>
+    </div><!-- /.home-window -->
 
     <script type="module" src="./main.tsx"></script>
   </body>

@@ -35,7 +35,22 @@
       "PowerShell(@\\('/images/qarryshowcase/0.png','/images/qarryshowcase/2.png','/images/qarryshowcase/6.png'\\) | ForEach-Object { try { $r = Invoke-WebRequest \"http://127.0.0.1:5174$_\" -UseBasicParsing -TimeoutSec 3; \"{0} {1}\" -f $_, $r.StatusCode } catch { \"{0} FAIL: {1}\" -f $_, $_.Exception.Message } })",
       "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\('C:\\\\Users\\\\meesz\\\\Downloads\\\\MeesPortfolio_extracted\\\\case-studies.js'\\); $text = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); $idx = $text.IndexOf\\('cs-pullquote'\\); $slice = $text.Substring\\($idx, 600\\); for \\($i=0; $i -lt $slice.Length; $i++\\) { $c = $slice[$i]; $code = [int]$c; if \\($code -gt 127\\) { Write-Host -NoNewline \\(\"[U+{0:X4}]\" -f $code\\) } else { Write-Host -NoNewline $c } })",
       "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\('C:\\\\Users\\\\meesz\\\\projects\\\\meeszon-site\\\\src\\\\case-studies.ts'\\); $text = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); $idx = $text.IndexOf\\('cs-pullquote'\\); $slice = $text.Substring\\($idx, 600\\); for \\($i=0; $i -lt $slice.Length; $i++\\) { $c = $slice[$i]; $code = [int]$c; if \\($code -gt 127\\) { Write-Host -NoNewline \\(\"[U+{0:X4}]\" -f $code\\) } else { Write-Host -NoNewline $c } })",
-      "PowerShell($mine = [System.IO.File]::ReadAllBytes\\('C:\\\\Users\\\\meesz\\\\projects\\\\meeszon-site\\\\src\\\\case-studies.ts'\\); $myText = [System.Text.Encoding]::UTF8.GetString\\($mine\\); $ex = [System.IO.File]::ReadAllBytes\\('C:\\\\Users\\\\meesz\\\\Downloads\\\\MeesPortfolio_extracted\\\\case-studies.js'\\); $exText = [System.Text.Encoding]::UTF8.GetString\\($ex\\); function dumpRegion\\($t, $needle\\) { $i = $t.IndexOf\\($needle\\); $slice = $t.Substring\\($i, 80\\); for \\($k=0; $k -lt $slice.Length; $k++\\) { $code = [int]$slice[$k]; if \\($code -gt 127\\) { Write-Host -NoNewline \\(\"[U+{0:X4}]\" -f $code\\) } else { Write-Host -NoNewline $slice[$k] } }; Write-Host '' }; Write-Host '--- MINE handwork ---'; dumpRegion $myText 'cs-ba-handwork-icon'; Write-Host '--- EXAMPLE handwork ---'; dumpRegion $exText 'cs-ba-handwork-icon'; Write-Host '--- MINE arrow-head ---'; dumpRegion $myText 'cs-ba-arrow-head'; Write-Host '--- EXAMPLE arrow-head ---'; dumpRegion $exText 'cs-ba-arrow-head')"
+      "PowerShell($mine = [System.IO.File]::ReadAllBytes\\('C:\\\\Users\\\\meesz\\\\projects\\\\meeszon-site\\\\src\\\\case-studies.ts'\\); $myText = [System.Text.Encoding]::UTF8.GetString\\($mine\\); $ex = [System.IO.File]::ReadAllBytes\\('C:\\\\Users\\\\meesz\\\\Downloads\\\\MeesPortfolio_extracted\\\\case-studies.js'\\); $exText = [System.Text.Encoding]::UTF8.GetString\\($ex\\); function dumpRegion\\($t, $needle\\) { $i = $t.IndexOf\\($needle\\); $slice = $t.Substring\\($i, 80\\); for \\($k=0; $k -lt $slice.Length; $k++\\) { $code = [int]$slice[$k]; if \\($code -gt 127\\) { Write-Host -NoNewline \\(\"[U+{0:X4}]\" -f $code\\) } else { Write-Host -NoNewline $slice[$k] } }; Write-Host '' }; Write-Host '--- MINE handwork ---'; dumpRegion $myText 'cs-ba-handwork-icon'; Write-Host '--- EXAMPLE handwork ---'; dumpRegion $exText 'cs-ba-handwork-icon'; Write-Host '--- MINE arrow-head ---'; dumpRegion $myText 'cs-ba-arrow-head'; Write-Host '--- EXAMPLE arrow-head ---'; dumpRegion $exText 'cs-ba-arrow-head')",
+      "Skill(frontend-design:frontend-design)",
+      "Skill(grill-with-docs)",
+      "Bash(gh issue *)",
+      "Bash(gh label *)",
+      "Bash(pnpm dev *)",
+      "PowerShell($proc = Start-Process -FilePath \"pnpm\" -ArgumentList \"dev\" -WorkingDirectory \"C:\\\\Users\\\\meesz\\\\projects\\\\meeszon-site\" -PassThru -RedirectStandardOutput \"dev.log\" -RedirectStandardError \"dev.err.log\" -WindowStyle Hidden; Write-Output \"PID: $\\($proc.Id\\)\"; Start-Sleep -Seconds 4; Get-Content \"dev.log\" -Tail 20 -ErrorAction SilentlyContinue; Write-Output \"--- STDERR ---\"; Get-Content \"dev.err.log\" -Tail 20 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5174/)",
+      "Bash(curl -s http://localhost:5173/__shutdown)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(pkill -f \"node.*vite\")",
+      "Bash(npx -p typescript@5 tsc --noEmit)",
+      "Bash(git stash *)"
     ]
   }
 }

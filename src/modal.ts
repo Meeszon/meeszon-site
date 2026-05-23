@@ -1,6 +1,10 @@
 /* ── Mees Portfolio · Browser window modal + Chrome tab bar ────────────
-   - Each project card click opens a draggable browser-window modal.
-   - Multiple windows can coexist; each one has a tab in the chrome bar.
+   - The chrome bar + page body together form a `HomeWindow` sitting on a
+     `Desktop` (Win7 wallpaper). Its traffic lights close / minimize /
+     toggle-maximize the whole thing; double-clicking the desktop shortcut
+     restores it.
+   - Each project card click opens a draggable browser-window modal that
+     shares the same z-stack as the home window.
    - Tabs also serve as the dock: minimize flies the window into its tab,
      restore flies it back out.
    ─────────────────────────────────────────────────────────────────────── */
@@ -89,7 +93,59 @@ const projectContent: Record<string, ProjectData> = {
   },
 };
 
-let windowsLayer: HTMLElement;
+let homeWindow: HomeWindow;
+
+// ── Drag plumbing ───────────────────────────────────────────────────────
+// Shared utility used by both BrowserWindow titlebars and HomeWindow's
+// tabs row. Emits cumulative deltas from the press point; the caller
+// stores its own starting position in `onStart`.
+interface DraggableOpts {
+  handle: HTMLElement;
+  isEnabled?: () => boolean;
+  onStart?: () => void;
+  onMove: (dx: number, dy: number) => void;
+  onEnd?: () => void;
+}
+function makeDraggable(opts: DraggableOpts) {
+  let startMouseX = 0;
+  let startMouseY = 0;
+
+  const readPoint = (e: MouseEvent | TouchEvent): [number, number] | null => {
+    const me = e as MouseEvent;
+    const te = e as TouchEvent;
+    const cx = me.clientX ?? te.touches?.[0]?.clientX;
+    const cy = me.clientY ?? te.touches?.[0]?.clientY;
+    if (cx == null || cy == null) return null;
+    return [cx, cy];
+  };
+  const onMove = (e: MouseEvent | TouchEvent) => {
+    const p = readPoint(e);
+    if (!p) return;
+    opts.onMove(p[0] - startMouseX, p[1] - startMouseY);
+  };
+  const onUp = () => {
+    window.removeEventListener("mousemove", onMove as EventListener);
+    window.removeEventListener("mouseup", onUp);
+    window.removeEventListener("touchmove", onMove as EventListener);
+    window.removeEventListener("touchend", onUp);
+    opts.onEnd?.();
+  };
+  const onDown = (e: MouseEvent | TouchEvent) => {
+    if (opts.isEnabled && !opts.isEnabled()) return;
+    if ((e.target as HTMLElement).closest("button, a, input")) return;
+    const p = readPoint(e);
+    if (!p) return;
+    [startMouseX, startMouseY] = p;
+    opts.onStart?.();
+    window.addEventListener("mousemove", onMove as EventListener);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove as EventListener, { passive: true });
+    window.addEventListener("touchend", onUp);
+    if (e.cancelable) e.preventDefault();
+  };
+  opts.handle.addEventListener("mousedown", onDown as EventListener);
+  opts.handle.addEventListener("touchstart", onDown as EventListener, { passive: false });
+}
 
 interface TabBarType {
   tabsEl: HTMLElement | null;
@@ -236,10 +292,7 @@ const TabBar: TabBarType = {
   },
 
   goHome() {
-    for (const key of Array.from(WindowManager.openWindows.keys())) {
-      WindowManager.minimize(key);
-    }
-    this.setActive("home");
+    homeWindow.bringToFront();
   },
 };
 
@@ -338,7 +391,7 @@ class BrowserWindow {
     this.sourceEl = sourceEl;
 
     this.node = this.build();
-    windowsLayer.appendChild(this.node);
+    document.body.appendChild(this.node);
     this.setupDrag();
     this.setupCarousel();
     this.setupCaseStudy();
@@ -492,44 +545,26 @@ class BrowserWindow {
 
   private setupDrag() {
     const titlebar = this.node.querySelector<HTMLElement>(".win-titlebar")!;
-    let startMouseX = 0, startMouseY = 0, startX = 0, startY = 0;
-
-    const onMove = (e: MouseEvent | TouchEvent) => {
-      const cx = (e as MouseEvent).clientX ?? ((e as TouchEvent).touches && (e as TouchEvent).touches[0].clientX);
-      const cy = (e as MouseEvent).clientY ?? ((e as TouchEvent).touches && (e as TouchEvent).touches[0].clientY);
-      if (cx == null) return;
-      this.x = startX + (cx - startMouseX);
-      this.y = startY + (cy - startMouseY);
-      this.applyPosition();
-    };
-    const onUp = () => {
-      this.isDragging = false;
-      this.node.classList.remove("dragging");
-      window.removeEventListener("mousemove", onMove as EventListener);
-      window.removeEventListener("mouseup", onUp);
-      window.removeEventListener("touchmove", onMove as EventListener);
-      window.removeEventListener("touchend", onUp);
-    };
-    const onDown = (e: MouseEvent | TouchEvent) => {
-      if ((e.target as HTMLElement).closest("button")) return;
-      const cx = (e as MouseEvent).clientX ?? ((e as TouchEvent).touches && (e as TouchEvent).touches[0].clientX);
-      const cy = (e as MouseEvent).clientY ?? ((e as TouchEvent).touches && (e as TouchEvent).touches[0].clientY);
-      if (cx == null) return;
-      startMouseX = cx;
-      startMouseY = cy;
-      startX = this.x;
-      startY = this.y;
-      this.isDragging = true;
-      this.node.classList.add("dragging");
-      WindowManager.focus(this.key);
-      window.addEventListener("mousemove", onMove as EventListener);
-      window.addEventListener("mouseup", onUp);
-      window.addEventListener("touchmove", onMove as EventListener, { passive: true });
-      window.addEventListener("touchend", onUp);
-      if (e.cancelable) e.preventDefault();
-    };
-    titlebar.addEventListener("mousedown", onDown as EventListener);
-    titlebar.addEventListener("touchstart", onDown as EventListener, { passive: false });
+    let startX = 0, startY = 0;
+    makeDraggable({
+      handle: titlebar,
+      onStart: () => {
+        startX = this.x;
+        startY = this.y;
+        this.isDragging = true;
+        this.node.classList.add("dragging");
+        WindowManager.focus(this.key);
+      },
+      onMove: (dx, dy) => {
+        this.x = startX + dx;
+        this.y = startY + dy;
+        this.applyPosition();
+      },
+      onEnd: () => {
+        this.isDragging = false;
+        this.node.classList.remove("dragging");
+      },
+    });
   }
 
   private applyPosition() {
@@ -615,8 +650,8 @@ class BrowserWindow {
       this.applyPosition();
       delete this.node.dataset.maxed;
     } else {
-      const w = Math.min(window.innerWidth - 24, 1100);
-      const h = window.innerHeight - 24;
+      const w = Math.floor(Math.min(window.innerWidth - 24, 1100) / 2) * 2;
+      const h = Math.floor((window.innerHeight - 24) / 2) * 2;
       this.node.style.width = `${w}px`;
       this.node.style.height = `${h}px`;
       this.x = 0; this.y = 0;
@@ -860,12 +895,209 @@ class BrowserWindow {
   }
 }
 
+// ── Desktop module ──────────────────────────────────────────────────────
+// Owns the Win7 desktop layer's only interactive node: the desktop
+// shortcut that restores the home window via double-click. Visibility
+// toggling is driven by HomeWindow's state transitions.
+const Desktop = {
+  shortcutEl: null as HTMLElement | null,
+
+  init(onRestoreRequest: () => void) {
+    this.shortcutEl = document.getElementById("desktop-shortcut");
+    if (!this.shortcutEl) return;
+    this.shortcutEl.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      onRestoreRequest();
+    });
+  },
+
+  setShortcutVisible(visible: boolean) {
+    if (this.shortcutEl) this.shortcutEl.hidden = !visible;
+  },
+};
+
+// ── HomeWindow ──────────────────────────────────────────────────────────
+// The chrome bar + page body, treated as a single window. Owns the three
+// new traffic lights on the chrome bar, the windowed drag offset, and the
+// state machine: maximized | windowed | minimized | closed.
+type HomeState = "maximized" | "windowed" | "minimized" | "closed";
+
+interface PreservedHomeState {
+  windowState: "maximized" | "windowed";
+  scrollY: number;
+  windowedX: number;
+  windowedY: number;
+}
+
+class HomeWindow {
+  node: HTMLElement;
+  tabsRow: HTMLElement;
+  pageEl: HTMLElement;
+  state: HomeState = "maximized";
+  windowedX = 0;
+  windowedY = 0;
+  private preserved: PreservedHomeState | null = null;
+
+  constructor() {
+    this.node = document.getElementById("home-window")!;
+    this.tabsRow = this.node.querySelector<HTMLElement>(".chrome-row-tabs")!;
+    this.pageEl = this.node.querySelector<HTMLElement>(".page")!;
+    this.wireTrafficLights();
+    this.wireDrag();
+    this.node.addEventListener("mousedown", (e) => {
+      if (this.state === "windowed") { this.bringToFront(); return; }
+      // In maximized mode, only background clicks raise home — clicking text,
+      // cards, links, or chrome controls leaves the z-stack alone so project
+      // windows in front stay reachable.
+      if (this.state !== "maximized") return;
+      const t = e.target as HTMLElement;
+      if (
+        t === this.node ||
+        t === this.pageEl ||
+        t.matches(".container, .hero, .hero-right, .ventures-grid, .ventures-heading-wrap, .ventures-heading-rule")
+      ) {
+        this.bringToFront();
+      }
+    });
+    // Initial z-index — participates in the shared z-stack from the start.
+    WindowManager.zCounter += 1;
+    this.node.style.zIndex = String(WindowManager.zCounter);
+  }
+
+  private wireTrafficLights() {
+    const close = this.node.querySelector<HTMLButtonElement>('[data-act="home-close"]');
+    const minimize = this.node.querySelector<HTMLButtonElement>('[data-act="home-minimize"]');
+    const maximize = this.node.querySelector<HTMLButtonElement>('[data-act="home-maximize"]');
+    close?.addEventListener("click", (e) => { e.stopPropagation(); this.close(); });
+    minimize?.addEventListener("click", (e) => { e.stopPropagation(); this.minimize(); });
+    maximize?.addEventListener("click", (e) => { e.stopPropagation(); this.toggleMaximize(); });
+  }
+
+  private wireDrag() {
+    let startX = 0, startY = 0;
+    makeDraggable({
+      handle: this.tabsRow,
+      isEnabled: () => this.state === "windowed",
+      onStart: () => {
+        startX = this.windowedX;
+        startY = this.windowedY;
+        this.node.classList.add("dragging");
+        this.bringToFront();
+      },
+      onMove: (dx, dy) => {
+        this.windowedX = startX + dx;
+        this.windowedY = startY + dy;
+        this.applyWindowedPos();
+      },
+      onEnd: () => {
+        this.node.classList.remove("dragging");
+      },
+    });
+  }
+
+  private applyWindowedPos() {
+    this.node.style.setProperty("--home-x", `${this.windowedX}px`);
+    this.node.style.setProperty("--home-y", `${this.windowedY}px`);
+  }
+
+  private setState(s: HomeState) {
+    document.body.classList.remove("home-maximized", "home-windowed", "home-minimized", "home-closed");
+    document.body.classList.add(`home-${s}`);
+    this.state = s;
+    Desktop.setShortcutVisible(s !== "maximized");
+  }
+
+  bringToFront() {
+    WindowManager.zCounter += 1;
+    this.node.style.zIndex = String(WindowManager.zCounter);
+    TabBar.setActive("home");
+  }
+
+  toggleMaximize() {
+    if (this.state !== "maximized" && this.state !== "windowed") return;
+    if (this.state === "windowed") {
+      this.setState("maximized");
+    } else {
+      this.windowedX = 0;
+      this.windowedY = 0;
+      this.applyWindowedPos();
+      this.setState("windowed");
+    }
+    this.bringToFront();
+  }
+
+  minimize() {
+    if (this.state !== "maximized" && this.state !== "windowed") return;
+    this.preserved = {
+      windowState: this.state,
+      scrollY: this.state === "windowed" ? this.pageEl.scrollTop : window.scrollY,
+      windowedX: this.windowedX,
+      windowedY: this.windowedY,
+    };
+    this.node.classList.add("is-home-minimizing");
+    const done = () => {
+      this.node.classList.remove("is-home-minimizing");
+      this.setState("minimized");
+    };
+    this.node.addEventListener("animationend", done, { once: true });
+  }
+
+  close() {
+    if (this.state === "closed") return;
+    this.preserved = null;
+    const projectKeys = [
+      ...Array.from(WindowManager.openWindows.keys()),
+      ...Array.from(WindowManager.minimized.keys()),
+    ];
+    for (const key of projectKeys) {
+      const w = WindowManager.openWindows.get(key) ?? WindowManager.minimized.get(key);
+      w?.node.classList.add("is-closing");
+    }
+    this.node.classList.add("is-home-closing");
+    const done = () => {
+      this.node.classList.remove("is-home-closing");
+      for (const key of projectKeys) {
+        const open = WindowManager.openWindows.get(key);
+        const mini = WindowManager.minimized.get(key);
+        if (open) { open.node.remove(); WindowManager.openWindows.delete(key); }
+        if (mini) { mini.node.remove(); WindowManager.minimized.delete(key); }
+        TabBar.removeProjectTab(key);
+      }
+      TabBar.setActive("home");
+      this.setState("closed");
+    };
+    this.node.addEventListener("animationend", done, { once: true });
+  }
+
+  restore() {
+    if (this.state !== "minimized" && this.state !== "closed") return;
+    const preserved = this.preserved;
+    this.preserved = null;
+
+    // Restoring from the desktop shortcut always lands in windowed mode —
+    // never maximized — so the Win7 wallpaper stays visible behind it.
+    this.windowedX = preserved?.windowedX ?? 0;
+    this.windowedY = preserved?.windowedY ?? 0;
+    this.applyWindowedPos();
+    this.setState("windowed");
+    const scrollY = preserved?.scrollY ?? 0;
+    requestAnimationFrame(() => this.pageEl.scrollTo(0, scrollY));
+
+    this.bringToFront();
+    this.node.classList.add("is-home-restoring");
+    this.node.addEventListener("animationend", () => {
+      this.node.classList.remove("is-home-restoring");
+    }, { once: true });
+  }
+}
+
 function isLightboxOpen(): boolean {
   return !!document.querySelector(".lightbox.is-open");
 }
 
 export function initModal() {
-  windowsLayer = document.getElementById("windows-layer")!;
+  homeWindow = new HomeWindow();
+  Desktop.init(() => homeWindow.restore());
 
   TabBar.init();
 

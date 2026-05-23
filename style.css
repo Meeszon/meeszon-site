@@ -9,8 +9,18 @@
   --color-border: rgba(26, 20, 16, 0.08);
   --color-accent: #b44836;
   --color-accent-soft: rgba(180, 72, 54, 0.12);
-  --color-win-bar: #e0d9d0;
-  --color-win-bar-active: #d6cec3;
+  --color-win-bar: #eae4dc;
+  --color-win-bar-active: #ddd5ca;
+  --bar-texture:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.55) 0,
+      rgba(255, 255, 255, 0.55) 1px,
+      transparent 1px,
+      transparent calc(100% - 1px),
+      rgba(26, 20, 16, 0.10) calc(100% - 1px),
+      rgba(26, 20, 16, 0.10) 100%
+    );
   --border-radius: 8px;
   --mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: "Space Grotesk", system-ui, sans-serif;
@@ -53,7 +63,7 @@ body {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 50;
-  background: var(--color-win-bar);
+  background: var(--bar-texture), var(--color-win-bar);
   border-bottom: 1px solid rgba(26, 20, 16, 0.18);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
   user-select: none;
@@ -78,9 +88,33 @@ body.has-chrome-bar { padding-top: 72px; }
   align-items: flex-end;
   gap: 1px;
   min-width: 0;
-  max-width: calc(100% - 280px);
+  max-width: calc(100% - 340px);
   overflow: hidden;
 }
+
+/* Traffic lights on the chrome bar — control the home window itself. */
+.chrome-lights {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 12px 6px 4px;
+}
+.chrome-light {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(26, 20, 16, 0.45);
+  padding: 0;
+  cursor: pointer;
+  background: var(--color-bg);
+  position: relative;
+  transition: filter 0.12s ease;
+}
+.chrome-light:hover { filter: brightness(1.08); }
+.chrome-light--close    { background: #ed6a5e; border-color: rgba(180, 30, 20, 0.55); }
+.chrome-light--minimize { background: #f5bf4f; border-color: rgba(170, 110, 0, 0.45); }
+.chrome-light--maximize { background: #61c454; border-color: rgba(40, 130, 50, 0.45); }
 
 .chrome-tab {
   display: inline-flex;
@@ -330,6 +364,10 @@ body.has-chrome-bar { padding-top: 72px; }
   .chrome-tab { max-width: 140px; font-size: 11px; }
   .chrome-toolbar-actions { display: none; }
   .chrome-time { display: none; }
+  /* Win7 metaphor is desktop-only: hide traffic lights, skip the wallpaper. */
+  .chrome-lights { display: none; }
+  .win7-desktop { display: none; }
+  .desktop-shortcut { display: none; }
 }
 
 /* ── Page layout ──────────────────────────────────────────────────────── */
@@ -568,22 +606,13 @@ h1 {
     1px 1px 0 rgba(26, 20, 16, 0.18);
 }
 
-/* Pinstripe titlebar */
 .venture-card-bar {
   height: 26px;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(26, 20, 16, 0.07) 0px,
-      rgba(26, 20, 16, 0.07) 1px,
-      transparent 1px,
-      transparent 5px
-    ),
-    var(--color-win-bar);
+  background: var(--bar-texture), var(--color-win-bar);
   border-bottom: 1px solid rgba(26, 20, 16, 0.18);
   flex-shrink: 0;
   position: relative;
@@ -723,15 +752,8 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
    BROWSER WINDOW MODAL
    ════════════════════════════════════════════════════════════════════════ */
 
-#windows-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
-}
-
 .win {
-  position: absolute;
+  position: fixed;
   width: 720px;
   max-width: calc(100vw - 40px);
   max-height: calc(100vh - 80px);
@@ -808,15 +830,7 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
   align-items: center;
   padding: 0 10px;
   gap: 10px;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(26, 20, 16, 0.07) 0px,
-      rgba(26, 20, 16, 0.07) 1px,
-      transparent 1px,
-      transparent 5px
-    ),
-    var(--color-win-bar);
+  background: var(--bar-texture), var(--color-win-bar);
   border-bottom: 1px solid rgba(26, 20, 16, 0.1);
   cursor: grab;
   user-select: none;
@@ -870,7 +884,7 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
   white-space: nowrap;
   pointer-events: none;
   background: var(--color-bg);
-  padding: 2px 16px;
+  padding: 0 16px 4px;
   border-radius: 4px;
   border: 1px solid rgba(26, 20, 16, 0.18);
 }
@@ -968,12 +982,17 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted) transparent;
 }
-.win-body::-webkit-scrollbar { width: 6px; }
+.win-body::-webkit-scrollbar { width: 6px; height: 6px; }
+.win-body::-webkit-scrollbar-track { background: transparent; }
 .win-body::-webkit-scrollbar-thumb {
-  background: rgba(158, 144, 130, 0.4);
+  background: var(--color-muted);
   border-radius: 999px;
+  opacity: 0.5;
 }
+.win-body::-webkit-scrollbar-thumb:hover { background: #7a6e63; }
 
 .win-content { display: flex; flex-direction: column; }
 
@@ -1317,7 +1336,15 @@ body.no-shadows .portrait-frame {
 }
 .win:has(.case-study) {
   height: calc(100vh - 80px);
-  max-height: 880px;
+  max-height: 600px;
+}
+.win[data-maxed="1"]:has(.case-study) {
+  max-height: none;
+}
+.win:has(.case-study) .win-addr {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 0 var(--color-bg);
 }
 
 .case-study {
@@ -1337,7 +1364,6 @@ body.no-shadows .portrait-frame {
   position: sticky;
   top: 0;
   z-index: 5;
-  margin-top: -1px;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -1469,8 +1495,9 @@ body.no-shadows .portrait-frame {
 
 /* ── Hero — compact one-line variant ─────────────────────────────────── */
 .cs-hero--compact {
-  padding: 22px 28px 20px;
+  padding: 22px 28px 22px;
 }
+.cs-hero--compact + .cs-section { padding-top: 0; }
 .cs-hero-h1 {
   font-family: var(--sans, inherit);
   font-size: 23px;
@@ -2394,3 +2421,218 @@ body.no-shadows .portrait-frame {
   .cs-stack-row { grid-template-columns: 1fr; gap: 6px; }
   .cs-footer { padding: 18px 18px 22px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   WIN7 DESKTOP METAPHOR
+   The chrome bar + .page together form `.home-window`. It sits on the
+   Win7 desktop layer and can be closed / minimized / toggled-windowed via
+   the three traffic lights in the chrome bar's tabs row.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Win7 wallpaper. Loaded only above the mobile breakpoint so phones
+   don't pay for the unused asset. */
+.win7-desktop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+@media (min-width: 641px) {
+  .win7-desktop { background-image: url("/images/windows-7.jpg"); }
+}
+/* In maximized mode the home window fills the viewport, so the wallpaper
+   is fully covered anyway — hide it so the original beige paper + film
+   grain (from html / html::before) show through the transparent home
+   window exactly as they did pre-Win7. */
+body.home-maximized .win7-desktop { display: none; }
+
+/* Home window — wraps chrome bar + page body. In maximized mode it has
+   no positioning of its own; the chrome bar inside stays fixed at viewport
+   top exactly as today. Z-index is assigned by HomeWindow so it
+   participates in the shared z-stack with project windows. */
+.home-window {
+  position: relative;
+  z-index: 100;
+}
+/* Opaque backdrop in maximized mode so project windows lower in the
+   z-stack don't show through the gaps in the home page content when
+   home is brought to the front. */
+body.home-maximized .home-window {
+  background: var(--color-bg);
+  min-height: calc(100vh - 72px);
+}
+
+/* Windowed: ~40px inset rectangle floating on the desktop. The chrome bar
+   becomes part of the home-window's flex column; the tabs row is the
+   drag handle. */
+body.home-windowed.has-chrome-bar { padding-top: 0; }
+body.home-windowed .home-window {
+  position: fixed;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg);
+  border-radius: 8px;
+  border: 1.5px solid rgba(26, 20, 16, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    6px 6px 0 rgba(26, 20, 16, 0.18);
+  transform: translate(var(--home-x, 0px), var(--home-y, 0px));
+}
+body.home-windowed .chrome-bar {
+  position: relative;
+  top: auto; left: auto; right: auto;
+  z-index: auto;
+}
+body.home-windowed .page {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted) transparent;
+}
+body.home-windowed .page::-webkit-scrollbar { width: 6px; height: 6px; }
+body.home-windowed .page::-webkit-scrollbar-track { background: transparent; }
+body.home-windowed .page::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+  border-radius: 999px;
+  opacity: 0.5;
+}
+body.home-windowed .page::-webkit-scrollbar-thumb:hover { background: #7a6e63; }
+body.home-windowed .chrome-row-tabs { cursor: grab; }
+body.home-windowed .home-window.dragging .chrome-row-tabs { cursor: grabbing; }
+
+/* Minimized / closed: hide the home window. The desktop shortcut is the
+   only thing left on screen. */
+body.home-minimized .home-window,
+body.home-closed .home-window { display: none; }
+body.home-minimized.has-chrome-bar,
+body.home-closed.has-chrome-bar { padding-top: 0; }
+
+/* Desktop shortcut — sole icon on the Win7 desktop when home is hidden. */
+.desktop-shortcut {
+  position: fixed;
+  top: 22px;
+  left: 22px;
+  z-index: 1;
+  user-select: none;
+}
+.desktop-shortcut[hidden] { display: none; }
+body.home-maximized .desktop-shortcut { display: none; }
+.desktop-shortcut-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px 6px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  font-family: var(--sans);
+  color: #fff;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.45),
+    0 0 4px rgba(0, 0, 0, 0.35);
+}
+.desktop-shortcut-btn:hover {
+  background: rgba(105, 160, 230, 0.22);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.desktop-shortcut-btn:focus-visible {
+  outline: 1px dotted rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+.desktop-shortcut-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+.desktop-shortcut-svg {
+  display: block;
+  width: 48px;
+  height: 48px;
+}
+.desktop-shortcut-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-align: center;
+  max-width: 84px;
+  line-height: 1.25;
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────
+   The home window only animates its own opacity; .page (which has no
+   fixed-position children) handles the scale-toward-top-left motion so
+   the chrome bar's containing block doesn't shift mid-flight. In
+   windowed mode the whole home-window can scale safely since the chrome
+   bar is no longer position:fixed. */
+
+.home-window.is-home-minimizing { animation: home-fade-out 0.34s ease forwards; }
+.home-window.is-home-closing    { animation: home-fade-out 0.3s  ease forwards; }
+.home-window.is-home-restoring  { animation: home-fade-in  0.34s ease forwards; }
+
+@keyframes home-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes home-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+
+/* In maximized mode, scale the page content toward top-left. */
+body.home-maximized .home-window.is-home-minimizing .page {
+  transform-origin: 0 0;
+  animation: home-page-shrink 0.34s ease forwards;
+}
+body.home-maximized .home-window.is-home-restoring .page {
+  transform-origin: 0 0;
+  animation: home-page-grow 0.34s ease forwards;
+}
+@keyframes home-page-shrink {
+  from { transform: scale(1); }
+  to   { transform: scale(0.08); }
+}
+@keyframes home-page-grow {
+  from { transform: scale(0.08); }
+  to   { transform: scale(1); }
+}
+
+/* In windowed mode, scale the whole home window — safe because the
+   chrome bar is no longer position:fixed and has no containing-block
+   surprise. */
+body.home-windowed .home-window.is-home-minimizing {
+  transform-origin: 0 0;
+  animation: home-windowed-minimize 0.34s ease forwards;
+}
+body.home-windowed .home-window.is-home-restoring {
+  transform-origin: 0 0;
+  animation: home-windowed-restore 0.34s ease forwards;
+}
+@keyframes home-windowed-minimize {
+  from { opacity: 1; transform: translate(var(--home-x, 0px), var(--home-y, 0px)) scale(1); }
+  to   { opacity: 0; transform: translate(calc(-40px + var(--home-x, 0px) * 0.05),
+                                            calc(-40px + var(--home-y, 0px) * 0.05))
+                                  scale(0.05); }
+}
+@keyframes home-windowed-restore {
+  from { opacity: 0; transform: translate(calc(-40px + var(--home-x, 0px) * 0.05),
+                                            calc(-40px + var(--home-y, 0px) * 0.05))
+                                  scale(0.05); }
+  to   { opacity: 1; transform: translate(var(--home-x, 0px), var(--home-y, 0px)) scale(1); }
+}
+
+/* When home is closed via red, every open/minimized project window
+   fades out in parallel — no staggered cascade. */
+.win.is-closing {
+  animation: win-fade-out 0.3s ease forwards;
+  pointer-events: none;
+}
+@keyframes win-fade-out { from { opacity: 1; } to { opacity: 0; } }

@@ -51,7 +51,7 @@ function qarry(): string {
   </nav>
 
   <header class="cs-hero cs-hero--compact">
-    <h1 class="cs-hero-h1">Fleet management application for Qarry's electric vehicles.</h1>
+    <h1 class="cs-hero-h1">Fleet management application for Qarry.</h1>
     <div class="cs-hero-facts">
       <span class="cs-fact"><span class="cs-fact-key">role</span> Designer &amp; Developer</span>
       <span class="cs-fact-sep" aria-hidden="true">·</span>
@@ -66,22 +66,8 @@ function qarry(): string {
   <section class="cs-section" id="cs-q-overview">
     ${sectionHead("01", "Overview")}
     <p class="cs-para">
-      <a href="https://qarry.com" target="_blank" rel="noopener">Qarry</a> builds compact electric last-mile vehicles in Helmond and leases them to fleet operators across the Netherlands. The new generation of vehicles ships with on-board telemetry: forty-five data points per vehicle, streaming back constantly. I was brought in to turn that data into a product.
+      <a href="https://qarry.com" target="_blank" rel="noopener">Qarry</a> builds compact electric last-mile vehicles in Helmond and leases them to fleet operators across the Netherlands. The new generation of vehicles ships with on-board telemetry, i was brought in to turn that data into a product.
     </p>
-    <ul class="cs-callouts">
-      <li class="cs-callout">
-        <span class="cs-callout-stat">240 vehicles</span>
-        <span class="cs-callout-label">Live on the platform, streaming telemetry</span>
-      </li>
-      <li class="cs-callout">
-        <span class="cs-callout-stat">110 fleets</span>
-        <span class="cs-callout-label">Customer operators with access to the dashboard</span>
-      </li>
-      <li class="cs-callout">
-        <span class="cs-callout-stat">45 signals</span>
-        <span class="cs-callout-label">Per vehicle, streaming continuously</span>
-      </li>
-    </ul>
     <div class="cs-audiences">
       <div class="cs-audience">
         <span class="cs-audience-tag">audience · 01</span>
@@ -153,7 +139,7 @@ function qarry(): string {
 
     <blockquote class="cs-pullquote">
       <span class="cs-quote-mark" aria-hidden="true">"</span>
-      <p>We get a lot of data off the vehicles already, but we aren't fully utilizing it.</p>
+      <p>We get a lot of data off the vehicles already, but we aren't fully utilizing it. The telemetry is all there we just need a way to turn it into something our customers and our team can actually act on.</p>
       <footer>— Founder, kickoff interview</footer>
     </blockquote>
 
@@ -305,7 +291,7 @@ function qarry(): string {
       </div>
       <div class="cs-stack-row">
         <dt><span class="cs-stack-key">[05]</span> Leaflet + OpenStreetMap</dt>
-        <dd>The map layer: vehicle markers, route trails, the parking dwell blocks on the timeline.</dd>
+        <dd>The map layer: vehicle markers, route trails, etc. Intuitive map controls.</dd>
       </div>
     </dl>
   </section>
