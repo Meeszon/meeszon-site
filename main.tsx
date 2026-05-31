@@ -2,9 +2,20 @@ import { createRoot } from 'react-dom/client';
 import FaceTracker from './src/components/FaceTracker';
 import { initModal } from './src/modal';
 
-createRoot(document.getElementById("viewer")!).render(
-  <FaceTracker basePath="/faces/" />
-);
+// On mobile the gaze-tracking portrait is dropped: there's no cursor to follow
+// and preloading the whole gaze frame-set isn't worth it on a phone. Render a
+// single static frame instead; mount the live FaceTracker only on larger screens.
+const viewer = document.getElementById("viewer")!;
+if (window.matchMedia("(max-width: 640px)").matches) {
+  const portrait = document.createElement("img");
+  portrait.src = "/faces/gaze_px0p0_py0p0_256.webp";
+  portrait.alt = "Mees Zonneveld";
+  portrait.className = "portrait-static";
+  portrait.draggable = false;
+  viewer.appendChild(portrait);
+} else {
+  createRoot(viewer).render(<FaceTracker basePath="/faces/" />);
+}
 
 const waveIcon = document.querySelector<HTMLElement>(".wave-icon")!;
 function triggerWave() {

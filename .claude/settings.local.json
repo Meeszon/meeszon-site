@@ -69,7 +69,8 @@
       "Bash(ffmpeg -y -v error -i schedule.mp4 -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -an _t_vp9_32.webm)",
       "Bash(rm -f _t_*.mp4 _t_*.webm)",
       "Bash(mkdir -p C:/Users/meesz/projects/meeszon-site/.video-originals)",
-      "Bash(cp schedule.mp4 skilltree.mp4 C:/Users/meesz/projects/meeszon-site/.video-originals/)"
+      "Bash(cp schedule.mp4 skilltree.mp4 C:/Users/meesz/projects/meeszon-site/.video-originals/)",
+      "PowerShell($bin = \"C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\"; & $bin --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=4 --window-size=1300,60 --screenshot=\"$env:TEMP\\\\tabshot6.png\" \"http://localhost:5173\" 2>$null; Start-Sleep -Seconds 2; Add-Type -AssemblyName System.Drawing; $src = [System.Drawing.Image]::FromFile\\(\"$env:TEMP\\\\tabshot6.png\"\\); $crop = New-Object System.Drawing.Bitmap\\(1200,240\\); $g = [System.Drawing.Graphics]::FromImage\\($crop\\); $g.DrawImage\\($src, \\(New-Object System.Drawing.Rectangle\\(0,0,1200,240\\)\\), \\(New-Object System.Drawing.Rectangle\\(0,0,1200,240\\)\\), [System.Drawing.GraphicsUnit]::Pixel\\); $crop.Save\\(\"$env:TEMP\\\\tabwide6.png\"\\); $g.Dispose\\(\\); $crop.Dispose\\(\\); $src.Dispose\\(\\); \"done\")"
     ]
   }
 }

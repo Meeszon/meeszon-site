@@ -427,6 +427,7 @@ class BrowserWindow {
     this.setupDrag();
     this.setupCarousel();
     this.setupCaseStudy();
+    this.setupMobileCompare();
 
     WindowManager.zCounter += 1;
     this.node.style.zIndex = String(WindowManager.zCounter);
@@ -511,10 +512,15 @@ class BrowserWindow {
           <button class="win-light win-light--minimize" data-act="minimize" aria-label="Minimize"></button>
           <button class="win-light win-light--maximize" data-act="maximize" aria-label="Toggle"></button>
         </div>
+        <button class="win-back" data-act="mobile-close" aria-label="Back to home">
+          <svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M6 1L1.5 6 6 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Back</span>
+        </button>
         <div class="win-title">
           ${d.name}
           <span class="win-title-dot">·</span>
           <span class="win-title-status">${d.statusLabel}</span>
+          ${hasCaseStudy ? `<span class="win-title-cs">/ case study</span>` : ""}
         </div>
         <div class="win-titlebar-right">/projects/${slug}</div>
       </div>
@@ -564,6 +570,12 @@ class BrowserWindow {
     node.querySelector<HTMLButtonElement>('[data-act="maximize"]')!.addEventListener("click", (e) => {
       e.stopPropagation();
       this.toggleMaximize();
+    });
+    // Mobile-only header "Back" pill (the traffic lights are hidden there).
+    // There's only one window on mobile, so Back == close == return to home.
+    node.querySelector<HTMLButtonElement>('[data-act="mobile-close"]')!.addEventListener("click", (e) => {
+      e.stopPropagation();
+      WindowManager.close(this.key);
     });
     node.querySelector<HTMLButtonElement>(".win-refresh")!.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -839,13 +851,66 @@ class BrowserWindow {
       const isBefore = label.includes("before") || /before/i.test(img.currentSrc || img.src);
       return isBefore ? { text: "Before redesign", kind: "before" } : undefined;
     };
+    // The MRR case study carries both a desktop and a mobile rendering of its
+    // process section; only one is displayed at a time (the other is
+    // display:none). Wire the lightbox to whichever set is actually visible so
+    // the hidden duplicates don't add phantom slides to the gallery.
     const mrrImgs = Array.from(cs.querySelectorAll<HTMLImageElement>(
       ".mrr-remote-screen > img, .mrr-shot-screen img, .mrr-screenshot img"
-    ));
+    )).filter((img) => img.offsetParent !== null);
     if (mrrImgs.length) {
       const mrrSlides = mrrImgs.map((img) => makeSlide(img, badgeFor(img)));
       wireZoom(mrrImgs, mrrSlides, (i) => i);
     }
+  }
+
+  // On mobile the desktop before/after grids (.mrr-deskcompare, two shots
+  // side-by-side) are too tall and the images too small. Progressively enhance
+  // each grid into a segmented toggle that swaps the two shots in place. The
+  // desktop grid is left untouched above 640px — this only runs on a narrow
+  // viewport. Swapping is display-based (the `hidden` attr + a CSS rule), never
+  // an opacity crossfade, so it can't strand on a half-faded frame.
+  private setupMobileCompare() {
+    if (!window.matchMedia("(max-width: 640px)").matches) return;
+    const cs = this.node.querySelector<HTMLElement>(".case-study");
+    if (!cs) return;
+
+    cs.querySelectorAll<HTMLElement>(".mrr-deskcompare").forEach((grid) => {
+      const shots = Array.from(grid.querySelectorAll<HTMLElement>(".mrr-shot"));
+      if (shots.length < 2) return;
+      const afterEl = shots.find((s) => s.querySelector(".cs-screen-label--after")) ?? shots[1];
+      const beforeEl = shots.find((s) => s !== afterEl) ?? shots[0];
+
+      grid.classList.add("mrr-compare-stage");
+      const badge = document.createElement("span");
+      badge.className = "mz-compare-badge";
+      grid.appendChild(badge);
+
+      const toggle = document.createElement("div");
+      toggle.className = "mz-toggle";
+      toggle.setAttribute("role", "group");
+      toggle.setAttribute("aria-label", "Before or after");
+      toggle.innerHTML = `
+        <button type="button" data-state="before">before</button>
+        <button type="button" data-state="after">after</button>`;
+      grid.parentElement?.insertBefore(toggle, grid);
+      const buttons = Array.from(toggle.querySelectorAll<HTMLButtonElement>("button"));
+
+      const set = (state: "before" | "after") => {
+        beforeEl.hidden = state !== "before";
+        afterEl.hidden = state !== "after";
+        badge.dataset.state = state;
+        badge.textContent = state;
+        buttons.forEach((b) => b.classList.toggle("is-active", b.dataset.state === state));
+      };
+      buttons.forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          set(b.dataset.state as "before" | "after");
+        })
+      );
+      set("after"); // default state = after (the redesign)
+    });
   }
 
   private setupCarousel() {

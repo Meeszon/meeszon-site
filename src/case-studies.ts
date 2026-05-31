@@ -334,7 +334,7 @@ function mrr(): string {
   </nav>
 
   <header class="cs-hero cs-hero--compact">
-    <h1 class="cs-hero-h1">A customer-facing redesign for MRR Drones.</h1>
+    <h1 class="cs-hero-h1">Remote-first redesign for MRR Drones.</h1>
     <div class="cs-hero-facts">
       <span class="cs-fact"><span class="cs-fact-key">role</span> Designer &amp; Developer</span>
       <span class="cs-fact-sep" aria-hidden="true">·</span>
@@ -356,6 +356,7 @@ function mrr(): string {
       I'm running a full redesign of the customer-facing app, end to end: research, design and the front-end build.
     </p>
     <figure class="cs-cover">
+      <p class="cs-cover-m-aside mz-aside">// desktop · the mission planner</p>
       <div class="cs-cover-desk">
         <div class="mrr-shot-frame">
           <div class="mrr-shot-screen">
@@ -363,12 +364,14 @@ function mrr(): string {
           </div>
         </div>
       </div>
+      <p class="cs-cover-m-aside mz-aside">// the remote · out in the field</p>
       <div class="cs-cover-remote">
         <div class="mrr-remote">
           <img class="mrr-remote-bezel" src="${MIMG}/remote.webp" alt="DJI remote running the redesigned app" draggable="false" />
           <div class="mrr-remote-screen"><img src="${MIMG}/after-remotehome.webp" alt="" draggable="false" /></div>
         </div>
       </div>
+      <p class="cs-cover-m-cap mz-cap">// the same product lives in two places — a desktop back at base, and a small DJI controller out in the field.</p>
     </figure>
   </section>
 
@@ -403,7 +406,7 @@ function mrr(): string {
       </li>
     </ol>
 
-    <p class="cs-aside">// the same product, two very different places</p>
+    <p class="cs-aside cs-aside--surfaces">// the same product, two very different places</p>
     <div class="cs-audiences">
       <div class="cs-audience">
         <span class="cs-audience-tag">surface · 01</span>
@@ -422,6 +425,10 @@ function mrr(): string {
   <!-- 03 PROCESS -->
   <section class="cs-section" id="cs-m-process">
     ${sectionHead("03", "Design Process")}
+
+    <!-- Desktop rendering of the process. On mobile this whole block is hidden
+         and the reworked .mrr-proc-mobile sequence below takes its place. -->
+    <div class="mrr-proc-desk">
     <p class="cs-para">
       Creating a mission is the hardest task in the app, and right now it's a single dense panel that's easy to get lost in. The design started from one idea: take that one complex task and split it into small steps a user can follow, one screen at a time.
     </p>
@@ -497,6 +504,52 @@ function mrr(): string {
         <figcaption class="mrr-remote-cap">// start the flight</figcaption>
       </figure>
     </div>
+    </div><!-- /.mrr-proc-desk -->
+
+    <!-- Mobile rendering of the process: intro → one "before" screen → a
+         numbered 01/02/03 sequence of the real "after" screens. The real
+         screenshots are the steps. Hidden on desktop (see style.css). -->
+    <div class="mrr-proc-mobile">
+      <p class="mz-para">
+        Creating a mission is the hardest task in the app, and it used to be a single dense panel that was easy to get lost in. The fix: take that one complex task and break it into a short sequence — one clear decision per screen.
+      </p>
+
+      <p class="mz-aside mz-aside--before">// before · the whole panel on one screen</p>
+      <div class="mrr-remote mrr-remote--m">
+        <img class="mrr-remote-bezel" src="${MIMG}/remote.webp" alt="DJI remote" draggable="false" />
+        <div class="mrr-remote-screen"><img src="${MIMG}/before-remotemissioncreate.webp" alt="Old mission flow on the remote" loading="lazy" draggable="false" /></div>
+      </div>
+      <p class="mz-cap">// everything at once on a tiny controller. Users didn't know where to start.</p>
+
+      <p class="mz-aside" style="margin-top:26px;">// after · one clear goal per screen</p>
+
+      <div class="mz-step">
+        <div class="mz-step-head">
+          <span class="mz-step-num">01</span>
+          <span class="mz-step-label">draw the flyzone</span>
+          <span class="mz-step-rule"></span>
+        </div>
+        <div class="mrr-screenshot"><img src="${MIMG}/after-remotemissioncreate-map.webp" alt="Drawing the flyzone on the remote" loading="lazy" draggable="false" /></div>
+      </div>
+
+      <div class="mz-step">
+        <div class="mz-step-head">
+          <span class="mz-step-num">02</span>
+          <span class="mz-step-label">configure settings</span>
+          <span class="mz-step-rule"></span>
+        </div>
+        <div class="mrr-screenshot"><img src="${MIMG}/after-remotemissioncreate-settings.webp" alt="Capture settings on the remote" loading="lazy" draggable="false" /></div>
+      </div>
+
+      <div class="mz-step">
+        <div class="mz-step-head">
+          <span class="mz-step-num">03</span>
+          <span class="mz-step-label">start the flight</span>
+          <span class="mz-step-rule"></span>
+        </div>
+        <div class="mrr-screenshot"><img src="${MIMG}/after-remotestartflight.webp" alt="Start a flight on the remote" loading="lazy" draggable="false" /></div>
+      </div>
+    </div><!-- /.mrr-proc-mobile -->
   </section>
 
   <!-- 04 BEFORE & AFTER -->

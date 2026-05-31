@@ -56,6 +56,15 @@ body {
   font-family: var(--sans);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
+  /* Kill the grey/blue flash that mobile browsers paint over tapped links and
+     buttons — it clashes badly with the warm-paper palette. */
+  -webkit-tap-highlight-color: transparent;
+}
+/* Touch devices get instant taps (no 300ms double-tap-zoom wait) on the
+   interactive surfaces, and no lingering tap highlight. */
+a, button, .venture-card, .social-btn, .chrome-tab {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* ── Browser chrome bar (tabs + toolbar) ──────────────────────────────── */
@@ -91,7 +100,11 @@ body.has-chrome-bar { padding-top: 40px; }
   gap: 1px;
   min-width: 0;
   max-width: calc(100% - 340px);
-  overflow: hidden;
+  /* Clip horizontally-overflowing tabs, but let the active tab's bridge
+     (::after below) spill a few px downward to cover the bar's bottom border —
+     plain `overflow: hidden` would clip that bridge and re-expose the line. */
+  overflow: clip;
+  overflow-clip-margin: 6px;
 }
 
 /* Traffic lights on the chrome bar — control the home window itself. */
@@ -153,12 +166,15 @@ body.has-chrome-bar { padding-top: 40px; }
     0 -1px 0 rgba(255, 255, 255, 0.55) inset,
     0 -1px 0 rgba(26, 20, 16, 0.05);
 }
-/* Active tab connects visually to the toolbar below */
+/* Active tab merges into the page below: a page-coloured strip that overhangs
+   the tab's bottom edge, painting over the bar's bottom border + drop shadow so
+   the tab reads as one continuous surface with the page. (Relies on the parent
+   .chrome-tabs using `overflow: clip` so this overhang isn't clipped away.) */
 .chrome-tab.active::after {
   content: "";
   position: absolute;
-  left: -1px; right: -1px; bottom: -1px;
-  height: 2px;
+  left: 0; right: 0; bottom: -2px;
+  height: 3px;
   background: var(--color-bg);
   z-index: 3;
 }
@@ -285,12 +301,13 @@ body.has-chrome-bar { padding-top: 40px; }
 }
 
 @media (max-width: 640px) {
-  body.has-chrome-bar { padding-top: 40px; }
-  .chrome-tabs { max-width: calc(100% - 80px); }
-  .chrome-tab { max-width: 140px; font-size: 11px; }
-  .chrome-time { display: none; }
-  /* Win7 metaphor is desktop-only: hide traffic lights, skip the wallpaper. */
-  .chrome-lights { display: none; }
+  /* Mobile drops the browser/Win7 metaphor on the home view entirely: no
+     chrome bar, no tabs, no wallpaper or desktop shortcut. The page content
+     just scrolls from the top of the screen. (Project windows keep their own
+     browser chrome when opened full-screen — see the window rules below.) */
+  .chrome-bar { display: none; }
+  body.has-chrome-bar { padding-top: 0; }
+  body.home-maximized .home-window { min-height: 100vh; }
   .win7-desktop { display: none; }
   .desktop-shortcut { display: none; }
 }
@@ -632,6 +649,50 @@ h1 {
   letter-spacing: 0.4px;
 }
 
+/* Mobile-only card extras (status chip, description/meta text, chevron) and the
+   mobile contact row. Hidden on desktop; the @media (max-width: 640px) block
+   reveals and lays them out. Defining the leaf styles here (rather than inside
+   the media query) keeps the mobile rules to a single layout pass. */
+.venture-card-status,
+.venture-card-text,
+.venture-card-go,
+.contact-row { display: none; }
+
+.contact-social {
+  width: 46px; height: 46px;
+  border-radius: 7px;
+  background: var(--color-bg);
+  border: 1px solid rgba(26, 20, 16, 0.22);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    3px 3px 0 rgba(26, 20, 16, 0.16);
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+  color: rgba(26, 20, 16, 0.55);
+  flex-shrink: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+}
+.contact-social:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 1px 1px 0 rgba(26, 20, 16, 0.18);
+  color: var(--color-text);
+}
+.contact-mail {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--color-muted);
+  letter-spacing: 0.2px;
+  text-align: right;
+}
+.contact-mail a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(26, 20, 16, 0.28);
+}
+
 /* ── Footer signoff ──────────────────── */
 .footer-meta {
   margin-top: 48px;
@@ -835,6 +896,13 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
   flex-shrink: 0;
   margin-left: auto;
 }
+
+/* Mobile-only "Back" pill + "/ case study" title suffix. Both live in the
+   titlebar markup but stay hidden on desktop, where the traffic lights handle
+   closing and the title sits centred; the max-width: 640px block reveals them
+   once the titlebar becomes a plain sticky header. */
+.win-back { display: none; }
+.win-title-cs { display: none; }
 
 /* ── Address bar inside the window ───────────────────────────────────── */
 .win-addr {
@@ -1227,37 +1295,298 @@ body.no-shadows .portrait-frame {
 @media (max-width: 640px) {
   .container {
     width: 100%;
-    padding: 60px 24px 48px;
+    padding: 60px 22px 40px;
   }
-  .bio { margin-top: 32px; letter-spacing: 0.5px; }
-  .ventures-heading-wrap { margin-top: 40px; flex-wrap: wrap; gap: 6px; }
-  .ventures-grid { margin-top: 24px; flex-wrap: wrap; }
-  .venture-card { flex: 0 0 calc(50% - 11px); }
+
+  /* ── Hero ─────────────────────────────────────────────────────────── */
+  .hero { gap: 16px; }
+  .hero-right { margin-top: 0; }
+  h1 { font-size: 42px; line-height: 1.12; letter-spacing: -0.5px; margin-top: 0; }
+  .h1-right { text-align: left; padding-right: 0; }
+  .portrait-frame { width: 92px; height: 92px; margin-top: 4px; }
+  .portrait-static { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .wave-icon { width: 30px; height: 30px; transform: translate(3px, -7px) rotate(9deg); }
+  @keyframes wave-click {
+    0%   { transform: translate(3px, -7px) rotate(9deg); }
+    15%  { transform: translate(3px, -7px) rotate(28deg); }
+    35%  { transform: translate(3px, -7px) rotate(-4deg); }
+    55%  { transform: translate(3px, -7px) rotate(24deg); }
+    75%  { transform: translate(3px, -7px) rotate(2deg); }
+    100% { transform: translate(3px, -7px) rotate(9deg); }
+  }
+
+  /* ── Bio + contact ────────────────────────────────────────────────── */
+  .bio {
+    margin-top: 28px;
+    font-size: 15.5px;
+    line-height: 1.62;
+    letter-spacing: 0.3px;
+  }
+  .bio-reach { display: none; }
+  /* The hero's social column moves into a dedicated contact row on mobile. */
+  .social-links { display: none; }
+  .contact-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .ventures-heading-wrap { margin-top: 44px; flex-wrap: wrap; gap: 6px; }
+
+  /* ── Project cards · full-width window rows ───────────────────────── */
+  .ventures-grid {
+    margin-top: 22px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+  .venture-card { flex: 1 1 auto; width: 100%; }
+  .venture-card-light {
+    background: var(--logo-color);
+    border-color: rgba(26, 20, 16, 0.45);
+  }
+  .venture-card-filename {
+    position: static;
+    transform: none;
+    left: auto; top: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    height: auto;
+  }
+  .venture-card-bar-spacer { display: none; }
+  .venture-card-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.3px;
+    text-transform: lowercase;
+    color: var(--color-muted);
+  }
+  .venture-card-status::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--logo-color);
+  }
+  .venture-card-body {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 16px 14px;
+  }
+  .venture-card-icon {
+    width: 60px; height: 60px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    background: var(--logo-color);
+    border: 1px solid rgba(26, 20, 16, 0.14);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  }
+  .venture-card-icon .logo-bg { fill: transparent; }
+  .venture-card-icon svg path:not(.logo-bg),
+  .venture-card-icon svg rect:not(.logo-bg) { fill: #fff; }
+  .venture-card[data-project="qarry"] .venture-card-icon svg path:not(.logo-bg) { fill: #222; }
+  .venture-card-year { display: none; }
+  .venture-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+  .venture-card-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--color-text);
+    letter-spacing: -0.2px;
+  }
+  .venture-card-desc {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--color-text);
+    opacity: 0.66;
+    text-wrap: pretty;
+  }
+  .venture-card-meta {
+    margin-top: 2px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--color-muted);
+    letter-spacing: 0.3px;
+  }
+  .venture-card-go {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--color-muted);
+  }
+
+  /* ── Footer ───────────────────────────────────────────────────────── */
+  .footer-commit { display: none; }
+  /* Stay on one row: signoff left, e-mail pushed to the right. */
+  .footer-meta {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 10px;
+  }
+
+  /* Project windows become a full-height sheet on mobile. The fake browser
+     chrome — traffic lights and address bar — is dropped (it doesn't earn its
+     keep on a phone, and minimize/maximize had nothing to do) and the titlebar
+     is re-cast as a plain header: project name on the left, one obvious close
+     button on the right. The rounded frame, shadow and centering transform go
+     too, so the sheet sits edge-to-edge. */
   .win {
-    width: calc(100vw - 24px);
-    max-height: 88vh;
+    width: 100vw;
+    max-width: 100vw;
+    /* Anchor to all four edges rather than top:0 + height:100dvh. A fixed
+       sheet sized only by 100dvh lags behind the viewport while the mobile
+       URL bar collapses/expands, briefly leaving a gap that exposes the page
+       below it. Pinning bottom:0 keeps the sheet glued to the visible bottom
+       through that transition, so no gap can appear. */
+    inset: 0;
+    height: auto;
+    max-height: none;
+    border-radius: 0;
+    border-width: 0;
+    box-shadow: none;
+    transform: none;
   }
+  .win:has(.case-study) {
+    height: auto;
+    max-height: none;
+  }
+
+  .win-addr { display: none; }
+  .win-lights { display: none; }
+  .win-titlebar-right { display: none; }
+
+  /* The titlebar becomes a clean sticky header: a "‹ Back" pill on the left,
+     the case-study title right-aligned. It sits above the scrolling body, so it
+     stays put as the case study scrolls. */
+  .win-titlebar {
+    height: 52px;
+    padding: 0 12px 0 10px;
+    gap: 10px;
+    cursor: default;
+  }
+  .win-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 13px 0 11px;
+    border: 1px solid rgba(26, 20, 16, 0.16);
+    border-radius: 9px;
+    background: var(--color-bg);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 1px 1px 0 rgba(26, 20, 16, 0.08);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--color-text);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .win-back svg { opacity: 0.7; }
+  .win-back:active {
+    background: var(--color-surface-hover);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  }
+  /* Title flows normally (was an absolutely-centered faux browser tab) and is
+     pushed to the right edge; the status pill gives way to "/ case study". */
+  .win-title {
+    position: static;
+    transform: none;
+    left: auto;
+    top: auto;
+    max-width: none;
+    min-width: 0;
+    margin-left: auto;
+    margin-right: 0;
+    text-align: right;
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    font-size: 12px;
+  }
+  .win-title-dot,
+  .win-title-status { display: none; }
+  .win-title-cs { display: inline; color: var(--color-muted); opacity: 0.7; }
+
+  /* Slide the sheet up on open/restore instead of the desktop scale-from-card
+     animation, which assumes the translate(-50%) centering full-screen lacks. */
+  .win.is-opening,
+  .win.is-restoring { animation: win-open-mobile 0.3s ease forwards; }
+  .win.is-minimized { animation: win-close-mobile 0.24s ease forwards; }
+  @keyframes win-open-mobile {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes win-close-mobile {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(26px); }
+  }
+
   .win-carousel-slide img { height: 220px; }
   .win-carousel-arrow { top: 110px; }
   .modal-meta { padding: 14px 18px; }
   .modal-lower { padding: 18px 18px; }
+
+  /* Lightbox: give the image the full width by lifting the nav arrows into a
+     centered row above it instead of pinning them to the left/right sides. */
+  .lightbox-img { max-width: calc(100vw - 24px); }
+  .lightbox-img,
+  .lightbox-pair img { max-height: calc(100vh - 180px); }
+  .lightbox-pair { gap: 12px; }
+  .lightbox-pair img { max-width: calc((100vw - 36px) / 2); }
+
+  .lightbox-arrow {
+    position: absolute;
+    top: auto;
+    bottom: calc(100% + 12px);
+    transform: none;
+    width: 40px; height: 40px;
+  }
+  .lightbox-prev { left: 50%; right: auto; margin-left: -48px; }
+  .lightbox-next { left: 50%; right: auto; margin-left: 8px; }
+
+  /* "Before redesign" badge: tuck it under the image, smaller. */
+  .lightbox-badge {
+    bottom: auto;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    padding: 5px 11px;
+    gap: 6px;
+  }
+  .lightbox-badge::before { width: 7px; height: 7px; }
 }
 
 @media (max-width: 500px) {
-  .hero { align-items: center; }
-  .hero-right { margin-top: 0; }
-  .hero-right .social-links { display: none; }
-  h1 { font-size: 38px; margin-top: 0; }
-  .wave-icon { width: 26px; height: 26px; transform: translate(3px, -2px) rotate(10deg); }
+  /* The social buttons live in the contact row below the bio on mobile (see the
+     max-width: 640px block), so the hero is just greeting + portrait here. */
+  .hero { align-items: flex-start; }
+  h1 { margin-top: 0; }
+  .wave-icon { width: 26px; height: 26px; transform: translate(3px, -7px) rotate(10deg); }
   @keyframes wave-click {
-    0%   { transform: translate(3px, -2px) rotate(10deg); }
-    15%  { transform: translate(3px, -2px) rotate(28deg); }
-    35%  { transform: translate(3px, -2px) rotate(-4deg); }
-    55%  { transform: translate(3px, -2px) rotate(24deg); }
-    75%  { transform: translate(3px, -2px) rotate(2deg); }
-    100% { transform: translate(3px, -2px) rotate(10deg); }
+    0%   { transform: translate(3px, -7px) rotate(10deg); }
+    15%  { transform: translate(3px, -7px) rotate(28deg); }
+    35%  { transform: translate(3px, -7px) rotate(-4deg); }
+    55%  { transform: translate(3px, -7px) rotate(24deg); }
+    75%  { transform: translate(3px, -7px) rotate(2deg); }
+    100% { transform: translate(3px, -7px) rotate(10deg); }
   }
-  .portrait-frame { width: 88px; height: 88px; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -1269,9 +1598,13 @@ body.no-shadows .portrait-frame {
 .win-body--case-study {
   scroll-behavior: smooth;
 }
-.win:has(.case-study) {
-  height: calc(100vh - 80px);
-  max-height: 600px;
+/* Desktop sizing only — on mobile the window is a full-height sheet (see the
+   max-width: 640px block), so this cap must not apply there. */
+@media (min-width: 641px) {
+  .win:has(.case-study) {
+    height: calc(100vh - 80px);
+    max-height: 600px;
+  }
 }
 .win[data-maxed="1"]:has(.case-study) {
   max-height: none;
@@ -2369,20 +2702,55 @@ body.no-shadows .portrait-frame {
 
 /* ── Responsive: cramped window or mobile ───────────────────────────── */
 @media (max-width: 640px) {
-  .cs-toc { padding: 8px 16px; }
-  .cs-hero { padding: 22px 18px 22px; }
-  .cs-hero-meta {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 16px;
+  /* The sticky Back-pill header is the only nav on mobile — the jump TOC is
+     dropped to match the cleaner case-study shell. */
+  .cs-toc { display: none; }
+
+  .cs-hero { padding: 24px 22px 6px; }
+  /* Keep the headline on mobile (a container query hides it on narrow windows
+     for the desktop multi-window layout; the phone sheet wants it shown). */
+  .cs-hero--compact .cs-hero-h1 { display: block; font-size: 24px; }
+
+  /* Facts stack as `key  value` rows under a dashed rule. */
+  .cs-hero-facts {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    border-top: 1px dashed rgba(26, 20, 16, 0.16);
+    padding-top: 14px;
+    font-size: 11.5px;
   }
-  .cs-hero-meta-item:nth-child(2)::after { display: none; }
-  .cs-headline { font-size: 24px; }
-  .cs-section { padding: 22px 18px 22px; }
-  .cs-callouts { grid-template-columns: 1fr; }
-  .cs-iterations { grid-template-columns: 1fr; }
-  .cs-req-grid { grid-template-columns: 1fr; gap: 6px; }
+  .cs-fact { white-space: normal; gap: 10px; }
+  .cs-fact-key { width: 64px; flex-shrink: 0; }
+  .cs-fact-sep { display: none; }
+  .cs-fact--client { display: inline-flex; }
+
+  .cs-section { padding: 26px 22px; }
+  /* Give the opening "01 overview" label more breathing room below the hero. */
+  .cs-hero + .cs-section .cs-section-head { margin-top: 16px; }
   .cs-stack-row { grid-template-columns: 1fr; gap: 6px; }
-  .cs-footer { padding: 18px 18px 22px; }
+  .cs-footer { padding: 18px 22px 24px; }
+
+  /* Overview cover stacks: desktop shot full-width, remote centred beneath. */
+  .cs-cover { padding-top: 0; }
+  .cs-cover-desk { width: 100%; margin: 0; }
+  .cs-cover-remote {
+    position: static;
+    left: auto; bottom: auto;
+    width: 64%;
+    max-width: 260px;
+    margin: 16px auto 0;
+  }
+  /* Process: hide the desktop block; the mobile sequence (.mrr-proc-mobile)
+     and the overview cover asides are re-shown by the override that trails
+     their defaults further down — see "re-show on the phone sheet" below.
+     They can't be flipped to block here because the component defaults that
+     set them display:none live later in the file and would win the cascade. */
+  .mrr-proc-desk { display: none; }
+
+  /* Before/After: the on-image "before"/"after" chips give way to the toggle's
+     own badge, so hide them on the comparison shots. */
+  .mrr-shot-frame .cs-screen-label { display: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -2882,6 +3250,10 @@ body.home-windowed .home-window.is-home-restoring {
 }
 
 /* ── hero cover · both surfaces of the redesign ────────────────────── */
+/* The labelling asides only render on the mobile sheet (see the ≤640 block);
+   on desktop the cover composes the desk shot + overlapping remote visually. */
+.cs-cover-m-aside,
+.cs-cover-m-cap { display: none; }
 .cs-cover {
   position: relative;
   margin: 20px 0 0;
@@ -2906,6 +3278,145 @@ body.home-windowed .home-window.is-home-restoring {
   color: var(--color-muted);
 }
 .cs-aside + .mrr-deskcompare { margin-top: 2px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MRR · MOBILE-ONLY CASE-STUDY PIECES
+   The reworked process sequence and the before/after toggle. These only ever
+   render on a phone: .mrr-proc-mobile is display:none until the ≤640 block
+   flips it, and .mrr-compare-stage is a class the JS only adds at mobile width.
+   ════════════════════════════════════════════════════════════════════════ */
+.mrr-proc-mobile { display: none; }
+
+/* Re-show on the phone sheet. This block trails the display:none default for
+   the mobile process sequence, so it wins the cascade where the earlier ≤640
+   block could not. The surfaces comparison and its intro aside are dropped
+   here — too wide and low-value on a phone. */
+@media (max-width: 640px) {
+  .mrr-proc-mobile { display: block; }
+
+  .cs-aside--surfaces,
+  .cs-audiences { display: none; }
+}
+
+.mz-para {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--color-text);
+  opacity: 0.82;
+  text-wrap: pretty;
+  margin-bottom: 14px;
+}
+.mz-aside {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.2px;
+  margin: 20px 0 10px;
+}
+.mz-aside--before { color: var(--color-accent); opacity: 0.95; }
+.mz-cap {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--color-muted);
+  letter-spacing: 0.1px;
+  margin-top: 8px;
+  text-wrap: pretty;
+}
+
+/* Numbered process step — the label sits ABOVE the screenshot, never over it. */
+.mz-step { margin-top: 14px; }
+.mz-step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.mz-step-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-text);
+  width: 23px; height: 23px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mz-step-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: 0.3px;
+}
+.mz-step-rule {
+  flex: 1;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right,
+    rgba(26, 20, 16, 0.2) 0px, rgba(26, 20, 16, 0.2) 4px,
+    transparent 4px, transparent 10px);
+}
+/* Constrain the remote bezel so it doesn't span the full sheet width. */
+.mrr-remote--m { max-width: 290px; margin-left: auto; margin-right: auto; }
+
+/* Before / After segmented toggle (built by setupMobileCompare). */
+.mz-toggle {
+  display: inline-flex;
+  padding: 3px;
+  gap: 3px;
+  background: rgba(26, 20, 16, 0.09);
+  border: 1px solid rgba(26, 20, 16, 0.18);
+  border-radius: 8px;
+  margin: 12px 0 10px;
+}
+.mz-toggle button {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  padding: 5px 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.mz-toggle button.is-active {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid rgba(26, 20, 16, 0.2);
+  box-shadow: 0 1px 2px rgba(26, 20, 16, 0.18);
+}
+.mz-toggle button.is-active[data-state="before"] { color: var(--color-accent); }
+
+/* The two shots overlap in one box so swapping never shifts layout. */
+.mrr-deskcompare.mrr-compare-stage {
+  display: grid;
+  grid-template-columns: 1fr;
+  position: relative;
+}
+.mrr-compare-stage .mrr-shot { grid-area: 1 / 1; }
+.mrr-compare-stage .mrr-shot[hidden] { display: none; }
+.mz-compare-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 4;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.4px;
+  text-transform: lowercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(26, 20, 16, 0.22);
+  background: rgba(242, 237, 232, 0.92);
+  color: var(--color-text);
+}
+.mz-compare-badge[data-state="before"] {
+  color: var(--color-accent);
+  border-color: rgba(180, 72, 54, 0.4);
+  background: rgba(180, 72, 54, 0.1);
+}
 
 /* ── lightbox before/after badge ───────────────────────────────────── */
 .lightbox-badge {
@@ -2952,4 +3463,57 @@ body.home-windowed .home-window.is-home-restoring {
   }
   .mrr-flow-arrow { transform: rotate(90deg); margin: 0; justify-self: center; }
   .mrr-deskcompare { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   QARRY · MOBILE-ONLY CASE-STUDY PIECES
+   The desktop Qarry study reflows for most sections — the input→output diagram
+   already stacks vertically with a downward arrow via the ≤720px block above,
+   and the overview/key-screen frames + stack table fall into line with the
+   shared ≤640 rules. These three blocks need a phone-specific shape:
+   the pullquote, the iteration strip, and the responsive phone pair.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Pullquote — drop the big EB Garamond " glyph; plain left-bar block. */
+  .cs-pullquote {
+    padding: 16px 16px 14px 18px;
+    border-left-width: 2px;
+    border-radius: 0 6px 6px 0;
+  }
+  .cs-quote-mark { display: none; }
+  .cs-pullquote p { font-size: 15px; }
+
+  /* Iteration strip (v1 / v2 / v3) — stack as thumbnail-left, text-right rows
+     instead of the 3-up grid. The shipped tag keeps its inverted chip. */
+  .cs-iterations {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .cs-iter {
+    flex-direction: row;
+    gap: 13px;
+    align-items: flex-start;
+  }
+  .cs-iter-card {
+    flex-shrink: 0;
+    width: 116px;
+  }
+  /* Perch the tag inside the thumb's top-left rather than floating above it. */
+  .cs-iter-card .cs-iter-tag { top: 5px; left: 5px; }
+  .cs-iter-meta { flex: 1; padding-top: 6px; }
+  .cs-iter-label { font-size: 13.5px; }
+  .cs-iter-note { font-size: 12px; color: var(--color-text); opacity: 0.72; }
+
+  /* Responsive phone pair — two equal columns, simpler frame (no notch / home
+     bar bezel, tighter radius). */
+  .cs-phone-row { gap: 14px; }
+  .cs-phone-frame {
+    max-width: none;
+    border-radius: 13px;
+    padding: 5px;
+  }
+  .cs-phone-screen { border-radius: 9px; }
+  .cs-phone-notch,
+  .cs-phone-home { display: none; }
 }
