@@ -1305,7 +1305,7 @@ body.no-shadows .portrait-frame {
   .h1-right { text-align: left; padding-right: 0; }
   .portrait-frame { width: 92px; height: 92px; margin-top: 4px; }
   .portrait-static { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .wave-icon { width: 30px; height: 30px; transform: translate(3px, -7px) rotate(9deg); }
+  .wave-icon { display: none; }
   @keyframes wave-click {
     0%   { transform: translate(3px, -7px) rotate(9deg); }
     15%  { transform: translate(3px, -7px) rotate(28deg); }
@@ -1342,6 +1342,18 @@ body.no-shadows .portrait-frame {
     gap: 16px;
   }
   .venture-card { flex: 1 1 auto; width: 100%; }
+  /* Touch devices have no real hover, so the flat no-shadows look reads as
+     broken — keep the retro drop shadow on at rest, pressed feedback on tap. */
+  body.no-shadows .venture-card {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      4px 4px 0 rgba(26, 20, 16, 0.16);
+  }
+  body.no-shadows .venture-card:active {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      1px 1px 0 rgba(26, 20, 16, 0.18);
+  }
   .venture-card-light {
     background: var(--logo-color);
     border-color: rgba(26, 20, 16, 0.45);
