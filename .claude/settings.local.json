@@ -50,7 +50,26 @@
       "Bash(pkill -f \"vite\")",
       "Bash(pkill -f \"node.*vite\")",
       "Bash(npx -p typescript@5 tsc --noEmit)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Read(//c/Users/meesz/projects/**)",
+      "Bash(sed -n '1140,1180p' style.css)",
+      "Bash(sed -n '2138,2175p' style.css)",
+      "Bash(echo \"=== tsc exit: $? ===\")",
+      "Bash(node -e ' *)",
+      "Bash(perl -0pi -e 's/const pct=\\\\\\(n,d\\\\\\)=>\\\\\\(100\\\\*n\\\\/d\\\\\\)\\\\.toFixed\\\\\\(2\\\\\\);//; ' /tmp/png.js)",
+      "Bash(node /tmp/png.js)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git *)",
+      "Bash(grep -iE '\\\\.\\(png|jpg|webp|avif\\)$')",
+      "PowerShell(npm run *)",
+      "Bash(node *)",
+      "Bash(grep -vE \"/images/|QIMG|MIMG|\\\\\\\\$\\\\{\")",
+      "Bash(perl -i -pe 's/\\\\.\\(png|jpe?g\\)/.webp/g' src/case-studies.ts src/modal.ts style.css)",
+      "Bash(ffmpeg -y -v error -i schedule.mp4 -c:v libx264 -crf 26 -preset slow -pix_fmt yuv420p -movflags +faststart -an _t_h264_26.mp4)",
+      "Bash(ffmpeg -y -v error -i schedule.mp4 -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -an _t_vp9_32.webm)",
+      "Bash(rm -f _t_*.mp4 _t_*.webm)",
+      "Bash(mkdir -p C:/Users/meesz/projects/meeszon-site/.video-originals)",
+      "Bash(cp schedule.mp4 skilltree.mp4 C:/Users/meesz/projects/meeszon-site/.video-originals/)"
     ]
   }
 }

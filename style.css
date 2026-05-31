@@ -65,21 +65,23 @@ body {
   z-index: 50;
   background: var(--bar-texture), var(--color-win-bar);
   border-bottom: 1px solid rgba(26, 20, 16, 0.18);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 2px 4px rgba(26, 20, 16, 0.04);
   user-select: none;
   font-family: var(--mono);
   color: var(--color-text);
 }
-body.has-chrome-bar { padding-top: 72px; }
+body.has-chrome-bar { padding-top: 40px; }
 
 .chrome-row { display: flex; align-items: center; gap: 6px; padding: 0 10px; }
 
-/* Tabs row */
+/* Tabs row — the sole chrome strip; the active tab merges into the page below */
 .chrome-row-tabs {
-  height: 38px;
+  height: 40px;
   align-items: flex-end;
   gap: 2px;
-  padding-top: 8px;
+  padding-top: 10px;
 }
 
 .chrome-tabs {
@@ -98,7 +100,7 @@ body.has-chrome-bar { padding-top: 72px; }
   gap: 6px;
   align-items: center;
   flex-shrink: 0;
-  padding: 0 12px 6px 4px;
+  padding: 0 12px 10px 4px;
 }
 .chrome-light {
   width: 11px;
@@ -175,7 +177,7 @@ body.has-chrome-bar { padding-top: 72px; }
   line-height: 1;
 }
 .chrome-tab-favicon.home-fav {
-  background: var(--color-text);
+  background: #555550;
   color: var(--color-bg);
   font-family: var(--sans);
   border-color: rgba(0, 0, 0, 0.3);
@@ -211,7 +213,6 @@ body.has-chrome-bar { padding-top: 72px; }
   color: var(--color-text);
   opacity: 1;
 }
-.chrome-tab.home .chrome-tab-close { display: none; }
 
 /* "+" new-tab button */
 .chrome-new-tab-wrap { position: relative; padding-bottom: 4px; }
@@ -283,86 +284,10 @@ body.has-chrome-bar { padding-top: 72px; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Toolbar row */
-.chrome-row-toolbar {
-  height: 34px;
-  background: var(--color-bg);
-  border-top: 1px solid rgba(26, 20, 16, 0.18);
-  gap: 8px;
-  padding: 0 12px;
-  position: relative;
-  z-index: 1;
-}
-.chrome-nav {
-  display: flex;
-  gap: 1px;
-  align-items: center;
-}
-.chrome-nav-btn {
-  width: 24px; height: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text);
-  opacity: 0.55;
-  padding: 0;
-}
-.chrome-nav-btn:hover:not(:disabled) {
-  background: rgba(26, 20, 16, 0.08);
-  opacity: 1;
-}
-.chrome-nav-btn:disabled { opacity: 0.22; cursor: default; }
-.chrome-nav-btn:disabled:hover { background: transparent; }
-.chrome-nav-btn svg { transition: transform 0.5s ease; }
-
-.chrome-url {
-  flex: 1;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  background: rgba(26, 20, 16, 0.045);
-  border: 1px solid rgba(26, 20, 16, 0.12);
-  border-radius: 12px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.1px;
-  min-width: 0;
-}
-.chrome-url-domain { color: var(--color-text); }
-.chrome-url-path {
-  color: var(--color-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.chrome-toolbar-actions {
-  display: flex;
-  gap: 4px;
-  color: rgba(26, 20, 16, 0.5);
-  font-family: var(--mono);
-  font-size: 13px;
-  flex-shrink: 0;
-}
-.chrome-toolbar-actions .chrome-action {
-  width: 24px; height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 @media (max-width: 640px) {
-  body.has-chrome-bar { padding-top: 68px; }
+  body.has-chrome-bar { padding-top: 40px; }
   .chrome-tabs { max-width: calc(100% - 80px); }
   .chrome-tab { max-width: 140px; font-size: 11px; }
-  .chrome-toolbar-actions { display: none; }
   .chrome-time { display: none; }
   /* Win7 metaphor is desktop-only: hide traffic lights, skip the wallpaper. */
   .chrome-lights { display: none; }
@@ -474,7 +399,7 @@ h1 {
 .bio {
   margin-top: 48px;
   font-size: 16px;
-  letter-spacing: 2.52px;
+  letter-spacing: 0.8px;
   color: var(--color-text);
   line-height: 1.5;
 }
@@ -1228,8 +1153,8 @@ body.no-shadows .portrait-frame {
   inset: 0;
   background: rgba(10, 8, 6, 0.88);
 }
-.lightbox-img {
-  max-width: min(1200px, calc(100vw - 160px));
+.lightbox-img,
+.lightbox-pair img {
   max-height: calc(100vh - 120px);
   object-fit: contain;
   border-radius: 6px;
@@ -1237,7 +1162,17 @@ body.no-shadows .portrait-frame {
   user-select: none;
   -webkit-user-drag: none;
 }
+.lightbox-img { max-width: min(1200px, calc(100vw - 160px)); }
+.lightbox-img[hidden] { display: none; }
 .lightbox-inner { position: relative; z-index: 1; }
+.lightbox-pair {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-pair[hidden] { display: none; }
+.lightbox-pair img { max-width: calc((100vw - 200px) / 2); }
 .lightbox-arrow {
   position: fixed;
   top: 50%;
@@ -1294,7 +1229,7 @@ body.no-shadows .portrait-frame {
     width: 100%;
     padding: 60px 24px 48px;
   }
-  .bio { margin-top: 32px; letter-spacing: 1.5px; }
+  .bio { margin-top: 32px; letter-spacing: 0.5px; }
   .ventures-heading-wrap { margin-top: 40px; flex-wrap: wrap; gap: 6px; }
   .ventures-grid { margin-top: 24px; flex-wrap: wrap; }
   .venture-card { flex: 0 0 calc(50% - 11px); }
@@ -1362,7 +1297,11 @@ body.no-shadows .portrait-frame {
 /* ── Sticky TOC strip ───────────────────────────────────────────────── */
 .cs-toc {
   position: sticky;
-  top: 0;
+  /* -1px (not 0): overlap the address-bar seam by 1px so Chromium's sticky
+     sub-pixel rounding can't open a 1px gap there when the window is
+     maximized. The window body's overflow clips the 1px, so it never bleeds
+     onto the address bar. */
+  top: -1px;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -2209,7 +2148,12 @@ body.no-shadows .portrait-frame {
   margin: 22px 0 0;
 }
 .cs-screen:last-child { margin-bottom: 0; }
-.cs-screen-frame {
+/* Shared paper-card treatment for framed screenshots: the desktop
+   before/after shots (.mrr-shot-frame), the bare wizard screenshots
+   (.mrr-screenshot), and the case-study screen frames. */
+.cs-screen-frame,
+.mrr-screenshot,
+.mrr-shot-frame {
   background: var(--color-bg);
   border: 1.5px solid rgba(26, 20, 16, 0.45);
   border-radius: 5px;
@@ -2225,6 +2169,25 @@ body.no-shadows .portrait-frame {
   transition: filter 0.18s ease;
 }
 .cs-screen-frame:hover img { filter: brightness(0.96); }
+
+/* ── Inline screen recording (lazy <video>) ─────────────────────────── */
+/* The shell carries an inline aspect-ratio so the frame reserves its space
+   before the clip loads — no layout shift when it streams in. */
+.cs-video .cs-screen-frame { background: #14110e; }
+.cs-video-shell {
+  position: relative;
+  width: 100%;
+  display: block;
+  background: rgba(26, 20, 16, 0.06);
+}
+.cs-video-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
 .cs-screen-label {
   position: absolute;
   top: 8px;
@@ -2441,7 +2404,7 @@ body.no-shadows .portrait-frame {
   background-repeat: no-repeat;
 }
 @media (min-width: 641px) {
-  .win7-desktop { background-image: url("/images/windows-7.jpg"); }
+  .win7-desktop { background-image: url("/images/windows-7.webp"); }
 }
 /* In maximized mode the home window fills the viewport, so the wallpaper
    is fully covered anyway — hide it so the original beige paper + film
@@ -2462,7 +2425,7 @@ body.home-maximized .win7-desktop { display: none; }
    home is brought to the front. */
 body.home-maximized .home-window {
   background: var(--color-bg);
-  min-height: calc(100vh - 72px);
+  min-height: calc(100vh - 40px);
 }
 
 /* Windowed: ~40px inset rectangle floating on the desktop. The chrome bar
@@ -2484,6 +2447,13 @@ body.home-windowed .home-window {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.55) inset,
     6px 6px 0 rgba(26, 20, 16, 0.18);
+}
+/* Only carry the drag-positioning transform once the window has actually
+   been moved off its default inset (HomeWindow toggles .is-offset). At rest
+   there's no ancestor transform, so the nested .page scroller stays on
+   Chromium's native composited-scroll fast path with no extra promoted
+   layers — which is the common case (incl. right after un-maximizing). */
+body.home-windowed .home-window.is-offset {
   transform: translate(var(--home-x, 0px), var(--home-y, 0px));
 }
 body.home-windowed .chrome-bar {
@@ -2498,6 +2468,15 @@ body.home-windowed .page {
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--color-muted) transparent;
+}
+/* Only while the window is actually offset does .home-window carry a
+   transform, knocking this nested scroller off Chromium's composited-scroll
+   fast path. In that case (and only then) promote the scroller to its own
+   layer so descendants (drop-shadowed bezels, clipped remote screens) scroll
+   in sync instead of lagging a frame. At rest we skip the promotion entirely
+   to avoid the layer churn that caused inconsistent scroll jank. */
+body.home-windowed .home-window.is-offset .page {
+  transform: translateZ(0);
 }
 body.home-windowed .page::-webkit-scrollbar { width: 6px; height: 6px; }
 body.home-windowed .page::-webkit-scrollbar-track { background: transparent; }
@@ -2636,3 +2615,341 @@ body.home-windowed .home-window.is-home-restoring {
   pointer-events: none;
 }
 @keyframes win-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MRR DRONES CASE STUDY · before/after surfaces (remote + desktop)
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── DJI remote frame ──────────────────────────────────────────────── */
+.mrr-remote {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 878 / 660;
+}
+.mrr-remote-bezel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(3px 5px 6px rgba(26, 20, 16, 0.22));
+}
+.mrr-remote-screen {
+  position: absolute;
+  /* The active glass in the bezel photo spans ~9.6%–90% wide; immediately
+     OUTSIDE it is the remote's light plastic. A flush box edge there blends
+     dark-screen against light-plastic on a composited layer and leaks a 1px
+     light hairline (inconsistent, vanishes on reload). Pulling every edge
+     ~0.4% inward seats them on the solid black glass — dark-on-dark, no
+     seam — leaving a thin uniform black gasket like a real device bezel.
+     The inset is proportional, so it holds at any viewport width. */
+  left: 10%;
+  top: 38.2%;
+  width: 79.6%;
+  height: 57.4%;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #07090c;
+  cursor: zoom-in;
+}
+.mrr-remote-screen > img {
+  /* Sit the shot 1.5px INSIDE the box's rounded clip, with its own matching
+     radius, so the overflow:hidden clip never has to cut the (light) image
+     edge. On fractional-DPR displays (e.g. a 150%-scaled laptop) a clipped
+     light edge antialiases into a faint white line that follows the corner
+     curve; keeping the image inside the clip means the clip only ever trims
+     the dark background. The 1.5px ring reads as a thin device-bezel gasket. */
+  position: absolute;
+  top: 1.5px;
+  left: 1.5px;
+  width: calc(100% - 3px);
+  height: calc(100% - 3px);
+  border-radius: 5px;
+  /* the glass is ~1.84:1 and the captures are ~1.79:1 — a hair narrower.
+     `fill` stretches that ~3% gap away so the shot reaches every edge of
+     the screen box (no black bars) without cropping any of the UI. */
+  object-fit: fill;
+  object-position: center;
+  display: block;
+  transition: filter 0.18s ease;
+}
+/* glare + vignette + recessed-glass inset for realism */
+.mrr-remote-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      123deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.05) 14%,
+      rgba(255, 255, 255, 0) 34%
+    ),
+    radial-gradient(
+      120% 90% at 50% 40%,
+      transparent 62%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    inset 0 0 9px 1px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+}
+.mrr-remote:hover .mrr-remote-screen > img { filter: brightness(0.94); }
+
+/* Bare framed screenshot — used for the 3 wizard steps, which are too small
+   to read three-up inside the bezel. Shares the paper-card frame (see
+   .cs-screen-frame) but shows the full capture with no crop. */
+.mrr-screenshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: zoom-in;
+  transition: filter 0.18s ease;
+}
+.mrr-screenshot:hover img { filter: brightness(0.96); }
+
+/* remote figure + caption */
+.mrr-remote-fig { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.mrr-remote-cap {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--color-muted);
+  line-height: 1.5;
+  letter-spacing: 0.1px;
+  text-wrap: pretty;
+  text-align: center;
+  max-width: 30em;
+  margin: 0 auto;
+}
+
+/* ── before / after scaffolding ────────────────────────────────────── */
+.mrr-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+.mrr-phase-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.mrr-tag {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid rgba(26, 20, 16, 0.28);
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
+}
+.mrr-tag--before { color: var(--color-muted); }
+.mrr-tag--after { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+
+/* remote row for the wizard steps */
+.mrr-remote-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 14px 0 0;
+  align-items: start;
+}
+.mrr-remote-row--one {
+  grid-template-columns: minmax(0, 360px);
+  justify-content: center;
+}
+.mrr-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mrr-step-n {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--color-muted);
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+.mrr-step-n b { color: var(--color-text); font-weight: 500; }
+
+/* ── initial-idea step flow (flat, not in drones) ──────────────────── */
+.mrr-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 0 10px;
+  margin: 14px 0 0;
+}
+.mrr-flow-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.mrr-flow-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 640 / 360;
+  border: 1.5px dashed rgba(26, 20, 16, 0.32);
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.mrr-flow-screen.s1 { background-image: url("/images/mrrshowcase/wizard-step1.webp"); }
+.mrr-flow-screen.s2 { background-image: url("/images/mrrshowcase/wizard-step2.webp"); }
+.mrr-flow-screen.s3 { background-image: url("/images/mrrshowcase/wizard-step3.webp"); }
+.mrr-flow-badge {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  z-index: 2;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid rgba(26, 20, 16, 0.32);
+  border-radius: 3px;
+  padding: 1px 6px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
+}
+.mrr-flow-cap {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--color-muted);
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  text-align: center;
+}
+.mrr-flow-cap b { color: var(--color-text); font-weight: 500; }
+.mrr-flow-arrow {
+  align-self: center;
+  margin-top: -22px;
+  font-family: var(--mono);
+  font-size: 17px;
+  color: var(--color-muted);
+  opacity: 0.55;
+}
+.mrr-tag--idea {
+  background: rgba(26, 20, 16, 0.04);
+  border-style: dashed;
+  color: var(--color-muted);
+}
+
+/* ── desktop before/after · side by side, no chrome bar ────────────── */
+.mrr-deskcompare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 14px 0 0;
+  align-items: start;
+}
+.mrr-shot { margin: 0; display: flex; flex-direction: column; }
+/* .mrr-shot-frame shares the paper-card frame — see .cs-screen-frame. */
+.mrr-shot-screen { overflow: hidden; position: relative; aspect-ratio: 1577 / 858; }
+.mrr-shot-screen img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: top left;
+  cursor: zoom-in;
+  transition: filter 0.18s ease;
+}
+.mrr-shot-frame:hover img { filter: brightness(0.96); }
+.cs-screen-label--after {
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-color: var(--color-text);
+}
+
+/* ── hero cover · both surfaces of the redesign ────────────────────── */
+.cs-cover {
+  position: relative;
+  margin: 20px 0 0;
+  padding-top: 4px;
+}
+.cs-cover-desk { width: 72%; margin-left: auto; margin-right: 6%; }
+.cs-cover-remote {
+  position: absolute;
+  left: 5%;
+  bottom: -22px;
+  width: 33%;
+  z-index: 2;
+}
+.cs-cover-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2px;
+  color: var(--color-muted);
+}
+.cs-aside + .mrr-deskcompare { margin-top: 2px; }
+
+/* ── lightbox before/after badge ───────────────────────────────────── */
+.lightbox-badge {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 5px;
+  pointer-events: none;
+}
+.lightbox-badge[hidden] { display: none; }
+.lightbox-badge::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.lightbox-badge--before {
+  color: #e8d6d2;
+  background: #7e342b;
+  border: 1px solid rgba(232, 214, 210, 0.25);
+}
+
+@container (max-width: 620px) {
+  .mrr-remote-row { grid-template-columns: 1fr; max-width: 320px; margin-inline: auto; }
+  .cs-cover-desk { width: 80%; }
+  .cs-cover-remote { width: 38%; }
+  .mrr-flow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-width: 320px;
+    margin-inline: auto;
+  }
+  .mrr-flow-arrow { transform: rotate(90deg); margin: 0; justify-self: center; }
+  .mrr-deskcompare { grid-template-columns: 1fr; }
+}

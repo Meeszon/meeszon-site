@@ -13,6 +13,20 @@ import { caseStudies } from "./case-studies";
 
 type ProjectStatus = "shipped" | "wip" | "archived";
 
+interface LightboxBadge {
+  text: string;
+  kind: "before" | "after";
+}
+
+// A lightbox slide built from one or more source <img>s in the case study.
+// All fields are optional so plain carousel slides satisfy the type too.
+type GallerySlide = HTMLElement & {
+  _sourceImg?: HTMLImageElement;
+  _sourceImgs?: HTMLImageElement[];
+  _pair?: string[];
+  _badge?: LightboxBadge;
+};
+
 interface ProjectData {
   name: string;
   status: ProjectStatus;
@@ -40,7 +54,19 @@ const projectContent: Record<string, ProjectData> = {
     description:
       "MRR Drones builds autonomous drone flight software. I am currently redesigning and developing the front-end for their application, overhauling the user flows to make them intuitive and easy to use, particularly on small screens like the DJI Remote.",
     descriptionLink: { text: "MRR Drones", href: "https://multirotorresearch.com/" },
-    gallery: ["/images/mrrshowcase/0.png", "/images/mrrshowcase/1.png"],
+    gallery: [
+      "/images/mrrshowcase/after-home.webp",
+      "/images/mrrshowcase/after-missioncreate.webp",
+      "/images/mrrshowcase/after-startflight.webp",
+      "/images/mrrshowcase/after-remotehome.webp",
+      "/images/mrrshowcase/after-remotemissioncreate-map.webp",
+      "/images/mrrshowcase/after-remotemissioncreate-settings.webp",
+      "/images/mrrshowcase/after-remotestartflight.webp",
+      "/images/mrrshowcase/before-home.webp",
+      "/images/mrrshowcase/before-missioncreate.webp",
+      "/images/mrrshowcase/before-startmission.webp",
+      "/images/mrrshowcase/before-remotemissioncreate.webp",
+    ],
     slug: "mrr-drones",
     logoColor: "#3D5AF2",
   },
@@ -56,40 +82,39 @@ const projectContent: Record<string, ProjectData> = {
       "A fleet management dashboard for Qarry. Live tracking across 240 vehicles, per-vehicle telemetry from ~45 on-board data points (trip history, battery, cell temps, voltage usage), and fleet analytics split into a customer view and a deeper in-house view.",
     descriptionLink: { text: "Qarry", href: "https://qarry.com" },
     gallery: [
-      "/images/qarryshowcase/0.png",
-      "/images/qarryshowcase/design-list.jpg",
-      "/images/qarryshowcase/design-maplist.jpg",
-      "/images/qarryshowcase/design-infomap.jpg",
-      "/images/qarryshowcase/design-highfidelity.jpg",
-      "/images/qarryshowcase/2.png",
-      "/images/qarryshowcase/4.png",
-      "/images/qarryshowcase/5.png",
-      "/images/qarryshowcase/6.png",
-      "/images/qarryshowcase/vehicledrawing.png",
-      "/images/qarryshowcase/mobile1.png",
-      "/images/qarryshowcase/mobile2.png",
+      "/images/qarryshowcase/0.webp",
+      "/images/qarryshowcase/design-list.webp",
+      "/images/qarryshowcase/design-maplist.webp",
+      "/images/qarryshowcase/design-infomap.webp",
+      "/images/qarryshowcase/design-highfidelity.webp",
+      "/images/qarryshowcase/2.webp",
+      "/images/qarryshowcase/4.webp",
+      "/images/qarryshowcase/5.webp",
+      "/images/qarryshowcase/6.webp",
+      "/images/qarryshowcase/vehicledrawing.webp",
+      "/images/qarryshowcase/mobile1.webp",
+      "/images/qarryshowcase/mobile2.webp",
     ],
     slug: "qarry",
     logoColor: "#fce36a",
   },
-  bathforge: {
-    name: "Bathforge",
-    status: "shipped",
-    statusLabel: "Shipped",
-    role: "Developer",
+  volume: {
+    name: "Volume",
+    status: "wip",
+    statusLabel: "In Progress",
+    role: "Designer & Developer",
     product: "Web App",
-    timeline: "Sep – Dec 2025",
-    tools: ["React", "Three.js", "Java", "Spring Boot"],
+    timeline: "2026 – Present",
+    tools: ["React", "CSS", "Supabase", "Framer Motion", "dnd"],
     description:
-      "A 3D bathroom configurator built for New Living Design GmbH. Users input the dimensions of their bathroom and the app generates a Three.js room. Products from the catalogue can then be placed, moved, and styled inside the space.",
+      "A personal project: a training guide and scheduler for boulderers. A branching skill tree lets you pick what to work on, and a drag-and-drop schedule turns those goals into a week of warmups, training blocks and climbing sessions.",
+    // No carousel — the case study carries the media (two screen recordings).
     gallery: [
-      "/images/newlivingshowcase/0.png",
-      "/images/newlivingshowcase/1.png",
-      "/images/newlivingshowcase/2.png",
-      "/images/newlivingshowcase/3.png",
+      "/images/volumeshowcase/skilltree.mp4",
+      "/images/volumeshowcase/schedule.mp4",
     ],
-    slug: "bathforge",
-    logoColor: "#94A3B8",
+    slug: "volume",
+    logoColor: "#16b89a",
   },
 };
 
@@ -177,7 +202,14 @@ const TabBar: TabBarType = {
     this.menuEl = document.getElementById("chrome-new-menu");
     this.newTabBtn = document.getElementById("chrome-new-tab");
 
-    this.homeTabEl?.addEventListener("click", () => this.goHome());
+    this.homeTabEl?.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest(".chrome-tab-close")) {
+        e.stopPropagation();
+        homeWindow.closeHomeOnly();
+        return;
+      }
+      this.goHome();
+    });
 
     document.getElementById("chrome-reload")?.addEventListener("click", () => {
       const svg = document.querySelector<SVGElement>("#chrome-reload svg");
@@ -444,7 +476,10 @@ class BrowserWindow {
     }
 
     const slug = d.slug;
-    const imageCount = (d.gallery && d.gallery.length) || 0;
+    const mediaCount = (d.gallery && d.gallery.length) || 0;
+    const mediaNoun = (d.gallery || []).every((src) => /\.(mp4|webm|mov)$/i.test(src))
+      ? "clip"
+      : "image";
 
     const shortBodyHTML = `
       <div class="modal-meta">
@@ -510,7 +545,7 @@ class BrowserWindow {
       </div>
       <div class="win-status">
         <span class="win-status-item"><span class="doc-dot"></span>Done</span>
-        <span class="win-status-item">${imageCount} image${imageCount === 1 ? "" : "s"}</span>
+        <span class="win-status-item">${mediaCount} ${mediaNoun}${mediaCount === 1 ? "" : "s"}</span>
         <span class="win-status-item">${d.tools.length} deps</span>
         <span class="win-status-spacer"></span>
         <span class="win-status-item">UTF-8</span>
@@ -650,8 +685,15 @@ class BrowserWindow {
       this.applyPosition();
       delete this.node.dataset.maxed;
     } else {
-      const w = Math.floor(Math.min(window.innerWidth - 24, 1100) / 2) * 2;
-      const h = Math.floor((window.innerHeight - 24) / 2) * 2;
+      // The window is centered with left/top:50% + translate(-50%). For the
+      // centered position to land on whole pixels, the window's size must have
+      // the same parity as the viewport — otherwise it sits on a half-pixel and
+      // internal seams (e.g. address bar / sticky TOC) round to a 1px gap.
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let w = Math.min(vw - 24, 1100);
+      let h = vh - 24;
+      if ((w & 1) !== (vw & 1)) w -= 1;
+      if ((h & 1) !== (vh & 1)) h -= 1;
       this.node.style.width = `${w}px`;
       this.node.style.height = `${h}px`;
       this.x = 0; this.y = 0;
@@ -666,6 +708,26 @@ class BrowserWindow {
     const body = this.node.querySelector<HTMLElement>(".win-body");
     if (!body) return;
 
+    // Screen recordings: stay off the wire (preload="none" + data-src) until
+    // they scroll into the window's own scroller, then fetch and autoplay;
+    // pause again once they leave so no off-screen video keeps decoding. Only
+    // the clip(s) actually on screen ever run.
+    const videos = Array.from(cs.querySelectorAll<HTMLVideoElement>("video[data-src]"));
+    if (videos.length) {
+      const io = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          const v = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting) {
+            if (v.dataset.src) { v.src = v.dataset.src; delete v.dataset.src; }
+            void v.play().catch(() => { /* autoplay rejected — leave paused */ });
+          } else if (!v.paused) {
+            v.pause();
+          }
+        }
+      }, { root: body, threshold: 0.25 });
+      videos.forEach((v) => io.observe(v));
+    }
+
     // TOC scroll-jumps (anchor links scroll the body, not the page)
     cs.querySelectorAll<HTMLAnchorElement>("[data-cs-jump]").forEach((link) => {
       link.addEventListener("click", (e) => {
@@ -679,13 +741,14 @@ class BrowserWindow {
       });
     });
 
-    // Highlight current section in TOC as we scroll
+    // Highlight current section in TOC as we scroll. Coalesce scroll events
+    // into one layout-reading pass per animation frame.
+    const toc = cs.querySelector<HTMLElement>(".cs-toc");
     const sections = Array.from(cs.querySelectorAll<HTMLElement>(".cs-section, .cs-hero"));
     const tocLinks = Array.from(cs.querySelectorAll<HTMLAnchorElement>("[data-cs-jump]"));
     const linkFor = (id: string) => tocLinks.find((l) => l.getAttribute("href") === "#" + id);
     let activeId: string | null = null;
     const updateActive = () => {
-      const toc = cs.querySelector<HTMLElement>(".cs-toc");
       const tocH = toc ? toc.getBoundingClientRect().height : 0;
       const probe = body.scrollTop + tocH + 24;
       let current: string | null = null;
@@ -698,35 +761,90 @@ class BrowserWindow {
         if (activeId) linkFor(activeId)?.classList.add("is-active");
       }
     };
-    body.addEventListener("scroll", updateActive, { passive: true });
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { ticking = false; updateActive(); });
+    };
+    body.addEventListener("scroll", onScroll, { passive: true });
     requestAnimationFrame(updateActive);
 
-    // Clickable case-study images → lightbox
-    const csImgs = Array.from(cs.querySelectorAll<HTMLImageElement>(
-      ".cs-laptop-screen img, .cs-screen-frame img"
-    ));
-    if (csImgs.length) {
-      const slideEls = csImgs.map((img) => {
-        const slide = document.createElement("div");
-        const inner = document.createElement("img");
-        inner.src = img.src;
-        slide.appendChild(inner);
-        (slide as HTMLElement & { _sourceImg?: HTMLImageElement })._sourceImg = img;
-        return slide;
+    // Clickable case-study images → lightbox. Build a slide from a source
+    // <img>, refresh stale sources (images may lazy-load after first build),
+    // and wire a set of source images to open `slides` at the slide they map to.
+    const makeSlide = (img: HTMLImageElement, badge?: LightboxBadge): GallerySlide => {
+      const slide = document.createElement("div") as GallerySlide;
+      const inner = document.createElement("img");
+      inner.src = img.currentSrc || img.src;
+      slide.appendChild(inner);
+      slide._sourceImg = img;
+      if (badge) slide._badge = badge;
+      return slide;
+    };
+    const refresh = (slides: GallerySlide[]) => {
+      slides.forEach((s) => {
+        if (s._sourceImgs) {
+          s._pair = s._sourceImgs.map((im) => im.currentSrc || im.src);
+        } else if (s._sourceImg) {
+          const innerImg = s.querySelector<HTMLImageElement>("img");
+          if (innerImg) innerImg.src = s._sourceImg.currentSrc || s._sourceImg.src;
+        }
       });
-      csImgs.forEach((img, idx) => {
+    };
+    const wireZoom = (
+      imgs: HTMLImageElement[],
+      slides: GallerySlide[],
+      slideIndex: (i: number) => number
+    ) => {
+      imgs.forEach((img, i) => {
         img.style.cursor = "zoom-in";
         img.addEventListener("click", (e) => {
           e.stopPropagation();
-          // Refresh src in case lazy-loaded after first build
-          slideEls.forEach((s) => {
-            const liveSrc = (s as HTMLElement & { _sourceImg?: HTMLImageElement })._sourceImg?.src;
-            const innerImg = s.querySelector<HTMLImageElement>("img");
-            if (liveSrc && innerImg) innerImg.src = liveSrc;
-          });
-          this.openLightbox(slideEls, idx);
+          refresh(slides);
+          this.openLightbox(slides, slideIndex(i));
         });
       });
+    };
+
+    const csImgs = Array.from(cs.querySelectorAll<HTMLImageElement>(
+      ".cs-laptop-screen img, .cs-screen-frame img"
+    ));
+    const slideEls: GallerySlide[] = csImgs.map((img) => makeSlide(img));
+
+    // The two responsive mobile screenshots join the same gallery as a
+    // single side-by-side slide rather than two separate ones.
+    const phoneImgs = Array.from(cs.querySelectorAll<HTMLImageElement>(".cs-phone-screen img"));
+    let phoneSlideIdx = -1;
+    if (phoneImgs.length) {
+      phoneSlideIdx = slideEls.length;
+      const slide = document.createElement("div") as GallerySlide;
+      slide._sourceImgs = phoneImgs;
+      slide._pair = phoneImgs.map((im) => im.currentSrc || im.src);
+      slideEls.push(slide);
+    }
+
+    if (slideEls.length) {
+      wireZoom(csImgs, slideEls, (i) => i);
+      wireZoom(phoneImgs, slideEls, () => phoneSlideIdx);
+    }
+
+    // MRR before/after images (remote screens + desktop shots) open one
+    // combined lightbox gallery with arrow + dot navigation. Only "before"
+    // images get a badge (read from the frame's label, or the filename as a
+    // fallback) so the viewer knows which state they're looking at.
+    const badgeFor = (img: HTMLImageElement): LightboxBadge | undefined => {
+      const label = img.closest(".mrr-shot-frame, .mrr-shot")
+        ?.querySelector(".cs-screen-label")?.textContent?.toLowerCase() ?? "";
+      const isBefore = label.includes("before") || /before/i.test(img.currentSrc || img.src);
+      return isBefore ? { text: "Before redesign", kind: "before" } : undefined;
+    };
+    const mrrImgs = Array.from(cs.querySelectorAll<HTMLImageElement>(
+      ".mrr-remote-screen > img, .mrr-shot-screen img, .mrr-screenshot img"
+    ));
+    if (mrrImgs.length) {
+      const mrrSlides = mrrImgs.map((img) => makeSlide(img, badgeFor(img)));
+      wireZoom(mrrImgs, mrrSlides, (i) => i);
     }
   }
 
@@ -829,7 +947,7 @@ class BrowserWindow {
     this.carouselGoTo = goTo;
   }
 
-  private openLightbox(slides: HTMLElement[], idx: number) {
+  private openLightbox(slides: GallerySlide[], idx: number) {
     const total = slides.length;
     if (this.lightbox) this.lightbox.remove();
     const lb = document.createElement("div");
@@ -837,17 +955,18 @@ class BrowserWindow {
     const dotsHTML = total > 1 ? Array.from({ length: total }, (_, i) =>
       `<button class="modal-dot${i === idx ? " active" : ""}" data-index="${i}" aria-label="Slide ${i + 1}"></button>`
     ).join("") : "";
-
     lb.innerHTML = `
       <div class="lightbox-backdrop"></div>
       <button class="lightbox-close" aria-label="Close">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
       <div class="lightbox-inner">
+        <span class="lightbox-badge" hidden></span>
         ${total > 1 ? `<button class="lightbox-arrow lightbox-prev" aria-label="Previous">
           <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7L7 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>` : ""}
         <img class="lightbox-img" draggable="false" alt="" />
+        <div class="lightbox-pair" hidden></div>
         ${total > 1 ? `<button class="lightbox-arrow lightbox-next" aria-label="Next">
           <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>` : ""}
@@ -859,16 +978,41 @@ class BrowserWindow {
 
     let cur = idx;
     const imgEl = lb.querySelector<HTMLImageElement>(".lightbox-img")!;
+    const pairEl = lb.querySelector<HTMLElement>(".lightbox-pair")!;
+    const badgeEl = lb.querySelector<HTMLElement>(".lightbox-badge")!;
     const lbDots = lb.querySelectorAll<HTMLButtonElement>(".modal-dot");
+
+    const setBadge = (b?: LightboxBadge) => {
+      if (b) {
+        badgeEl.textContent = b.text;
+        badgeEl.className = `lightbox-badge lightbox-badge--${b.kind}`;
+        badgeEl.hidden = false;
+      } else {
+        badgeEl.hidden = true;
+      }
+    };
 
     const go = (i: number) => {
       cur = ((i % total) + total) % total;
-      const slideImg = slides[cur].querySelector<HTMLImageElement>("img")!;
-      if (slideImg.dataset.src) {
-        slideImg.src = slideImg.dataset.src;
-        delete slideImg.dataset.src;
+      const slide = slides[cur];
+      const pair = slide._pair;
+      if (pair && pair.length) {
+        pairEl.innerHTML = pair
+          .map((src) => `<img src="${src}" draggable="false" alt="" />`)
+          .join("");
+        pairEl.hidden = false;
+        imgEl.hidden = true;
+      } else {
+        const slideImg = slide.querySelector<HTMLImageElement>("img")!;
+        if (slideImg.dataset.src) {
+          slideImg.src = slideImg.dataset.src;
+          delete slideImg.dataset.src;
+        }
+        imgEl.src = slideImg.src;
+        imgEl.hidden = false;
+        pairEl.hidden = true;
       }
-      imgEl.src = slideImg.src;
+      setBadge(slide._badge);
       lbDots.forEach((d, j) => d.classList.toggle("active", j === cur));
       this.carouselGoTo?.(cur, false);
     };
@@ -998,6 +1142,10 @@ class HomeWindow {
   private applyWindowedPos() {
     this.node.style.setProperty("--home-x", `${this.windowedX}px`);
     this.node.style.setProperty("--home-y", `${this.windowedY}px`);
+    // Carry the positioning transform (and the compositing-layer promotion it
+    // forces on .page) only while the window is genuinely off its default
+    // inset — see style.css. At 0,0 the scroller stays on the native fast path.
+    this.node.classList.toggle("is-offset", this.windowedX !== 0 || this.windowedY !== 0);
   }
 
   private setState(s: HomeState) {
@@ -1064,6 +1212,20 @@ class HomeWindow {
         TabBar.removeProjectTab(key);
       }
       TabBar.setActive("home");
+      this.setState("closed");
+    };
+    this.node.addEventListener("animationend", done, { once: true });
+  }
+
+  // Close only the home window, leaving any open project windows (and their
+  // tabs) alone — same scope as minimize(). Used by the home tab's × button;
+  // the close traffic light still uses close() to dismiss everything.
+  closeHomeOnly() {
+    if (this.state === "closed") return;
+    this.preserved = null;
+    this.node.classList.add("is-home-closing");
+    const done = () => {
+      this.node.classList.remove("is-home-closing");
       this.setState("closed");
     };
     this.node.addEventListener("animationend", done, { once: true });

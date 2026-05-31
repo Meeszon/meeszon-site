@@ -22,28 +22,16 @@ export function gridToFilename(px, py) {
 
 export function useGazeTracking(containerRef, basePath = '/faces/') {
   const [currentImage, setCurrentImage] = useState(null);
-  const rectRef = useRef(null);
   const lastImageRef = useRef(null);
 
-  // Cache the container rect; only recompute on resize/scroll, not every mousemove.
-  useEffect(() => {
-    function updateRect() {
-      if (containerRef.current) {
-        rectRef.current = containerRef.current.getBoundingClientRect();
-      }
-    }
-    updateRect();
-    window.addEventListener('resize', updateRect);
-    window.addEventListener('scroll', updateRect, { passive: true });
-    return () => {
-      window.removeEventListener('resize', updateRect);
-      window.removeEventListener('scroll', updateRect);
-    };
-  }, [containerRef]);
-
+  // Read the container rect fresh on each move. Caching it (invalidated only on
+  // resize/scroll) goes stale when the home window is closed and reopened —
+  // restoring moves the portrait to a new on-screen position without firing
+  // either event, so the gaze center would be computed from the old location.
   const updateGaze = useCallback((clientX, clientY) => {
-    const rect = rectRef.current;
-    if (!rect) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
 
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -64,27 +52,37 @@ export function useGazeTracking(containerRef, basePath = '/faces/') {
       lastImageRef.current = imagePath;
       setCurrentImage(imagePath);
     }
-  }, [basePath]);
+  }, [basePath, containerRef]);
 
   useEffect(() => {
-    const handleMouseMove = (e) => updateGaze(e.clientX, e.clientY);
+    // Coalesce pointer events into one updateGaze (and thus one layout read)
+    // per animation frame instead of running on every move event.
+    let frame = 0;
+    let lastX = 0, lastY = 0;
+    const schedule = (x, y) => {
+      lastX = x; lastY = y;
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; updateGaze(lastX, lastY); });
+    };
+    const handleMouseMove = (e) => schedule(e.clientX, e.clientY);
     const handleTouchMove = (e) => {
-      if (e.touches.length > 0) updateGaze(e.touches[0].clientX, e.touches[0].clientY);
+      if (e.touches.length > 0) schedule(e.touches[0].clientX, e.touches[0].clientY);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
 
-    if (rectRef.current) {
-      const { left, top, width, height } = rectRef.current;
+    if (containerRef.current) {
+      const { left, top, width, height } = containerRef.current.getBoundingClientRect();
       updateGaze(left + width / 2, top + height / 2);
     }
 
     return () => {
+      if (frame) cancelAnimationFrame(frame);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [updateGaze]);
+  }, [updateGaze, containerRef]);
 
   return { currentImage };
 }
