@@ -1335,6 +1335,12 @@ export function initModal() {
         const key = card.dataset.project;
         if (key) WindowManager.open(key, card);
       });
+      card.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        const key = card.dataset.project;
+        if (key) WindowManager.open(key, card);
+      });
     });
 
   document.addEventListener("keydown", (e) => {

@@ -548,6 +548,11 @@ h1 {
     1px 1px 0 rgba(26, 20, 16, 0.18);
 }
 
+.venture-card:focus-visible {
+  outline: 2px dotted rgba(26, 20, 16, 0.65);
+  outline-offset: 2px;
+}
+
 .venture-card-bar {
   height: 26px;
   display: flex;
