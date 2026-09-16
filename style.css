@@ -1562,12 +1562,12 @@ body.no-shadows .portrait-frame {
      centered row above it instead of pinning them to the left/right sides. */
   .lightbox-img { max-width: calc(100vw - 24px); }
   .lightbox-img,
-  .lightbox-pair img { max-height: calc(100vh - 180px); }
+  .lightbox-pair img { max-height: calc(100vh - 200px); }
   /* dvh, where supported, so a visible URL bar shrinks the image rather than
      pushing the arrows and the badge past the edges of the screen. */
   @supports (height: 100dvh) {
     .lightbox-img,
-    .lightbox-pair img { max-height: calc(100dvh - 180px); }
+    .lightbox-pair img { max-height: calc(100dvh - 200px); }
   }
   .lightbox-pair { gap: 12px; }
   .lightbox-pair img { max-width: calc((100vw - 36px) / 2); }
@@ -3463,23 +3463,25 @@ body.home-windowed .home-window.is-home-restoring {
 
 /* Mobile has to live right here, after the base rule: an override in the
    max-width: 640px block further up the file loses the cascade to it (same
-   specificity, later wins) and never applies.
-   On a narrow screen the strip above the image belongs to the nav arrows, and
-   a tall image can push it off the top of the screen entirely -- so the badge
-   sits on the image's own top-left corner, where it can't be covered or
-   clipped. */
+   specificity, later wins), so the two would blend into a badge positioned
+   half off the left edge of the screen.
+   The strip above the image belongs to the nav arrows on mobile, so the badge
+   goes under the image, centred. The 200px the image gives up above covers
+   both: 100px over it for the arrows, 100px under it for the badge and the
+   dots. */
 @media (max-width: 640px) {
   .lightbox-badge {
     bottom: auto;
-    top: 10px;
-    left: 10px;
-    max-width: calc(100% - 20px);
-    font-size: 10px;
-    letter-spacing: 1px;
-    padding: 5px 10px;
+    top: calc(100% + 10px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: calc(100vw - 24px);
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    padding: 5px 11px;
     gap: 6px;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(10, 8, 6, 0.45);
   }
   .lightbox-badge::before { width: 7px; height: 7px; }
 }
