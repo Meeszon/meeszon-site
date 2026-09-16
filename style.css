@@ -980,6 +980,10 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  /* Don't hand the scroll on to the page once this hits its top or bottom.
+     Without it, scrolling inside a window quietly scrolls the desktop behind
+     it the moment the window runs out of travel. */
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--color-muted) transparent;
 }
@@ -992,7 +996,26 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
 }
 .win-body::-webkit-scrollbar-thumb:hover { background: #7a6e63; }
 
-.win-content { display: flex; flex-direction: column; }
+.win-content {
+  display: flex;
+  flex-direction: column;
+  /* Keep the whole scrolling content in ONE compositing layer.
+     Without this Chrome splits it: ordinary text and images paint into the
+     window's layer, but anything that needs a layer of its own — a <video>, a
+     sticky strip, an absolutely-positioned overlay squashed in with one — gets
+     promoted separately, and those separate layers are positioned a commit
+     behind the compositor's scroll. The result is that videos, the before/
+     after tags on the comparison shots and the remote's screen slide along at
+     the right speed but trail the content they sit on, by enough to read as
+     half a second of lag. The main thread is idle at a clean 60fps while it
+     happens — it is a layer split, not slow code, which is why nothing about
+     making the page cheaper ever touched it.
+     Promoting this wrapper collapses the split: one layer the compositor moves
+     as a unit, so nothing inside can fall out of step with anything else.
+     It costs one rastered layer per open window; Chrome tiles it, so only the
+     visible region is ever held in memory. */
+  will-change: transform;
+}
 
 .modal-meta {
   display: flex;
@@ -1637,15 +1660,17 @@ body.no-shadows .portrait-frame {
     );
 }
 
-/* ── Sticky TOC strip ───────────────────────────────────────────────── */
+/* ── TOC strip ──────────────────────────────────────────────────────── */
+/* Lives in the window chrome, between .win-addr and .win-body — setupCaseStudy
+   moves it there out of the case-study markup. It was `position: sticky` at
+   the top of the scroller, which pinned it in exactly this spot but made
+   Chrome hand the content it can overlap to the main thread, a commit behind
+   the compositor's scroll; see the note in setupCaseStudy. As a plain flex
+   child of .win it lands on the same pixels with none of that. It also sits
+   flush against the address bar now, so the 1px seam the old `top: -1px`
+   guarded against can't open. */
 .cs-toc {
-  position: sticky;
-  /* -1px (not 0): overlap the address-bar seam by 1px so Chromium's sticky
-     sub-pixel rounding can't open a 1px gap there when the window is
-     maximized. The window body's overflow clips the 1px, so it never bleeds
-     onto the address bar. */
-  top: -1px;
-  z-index: 5;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -3003,6 +3028,17 @@ body.home-windowed .home-window.is-home-restoring {
   position: relative;
   width: 100%;
   aspect-ratio: 878 / 660;
+  /* The drop-shadow traces the remote's alpha silhouette, so it has to be a
+     filter rather than a box-shadow. Keep it on the WRAPPER, not on the bezel
+     <img>: a filter gives its element its own render surface, and the screen
+     (z-index 2) overlaps the bezel (z-index 1) and paints after it, so a
+     filter on the bezel alone splits the two into separate compositing layers.
+     They then re-raster at different moments while the case study scrolls and
+     the screen visibly drifts against the bezel it is seated in. Filtering the
+     wrapper puts bezel + screen in ONE surface, where they cannot come apart.
+     The screen sits entirely inside the bezel's silhouette, so the shadow the
+     filter traces is unchanged. */
+  filter: drop-shadow(3px 5px 6px rgba(26, 20, 16, 0.22));
 }
 .mrr-remote-bezel {
   position: absolute;
@@ -3012,7 +3048,6 @@ body.home-windowed .home-window.is-home-restoring {
   display: block;
   z-index: 1;
   pointer-events: none;
-  filter: drop-shadow(3px 5px 6px rgba(26, 20, 16, 0.22));
 }
 .mrr-remote-screen {
   position: absolute;

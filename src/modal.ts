@@ -366,7 +366,7 @@ const WindowManager = {
       open.close();
       this.openWindows.delete(key);
     } else if (mini) {
-      mini.node.remove();
+      mini.close();
       this.minimized.delete(key);
     } else {
       return;
@@ -432,7 +432,18 @@ class BrowserWindow {
     WindowManager.zCounter += 1;
     this.node.style.zIndex = String(WindowManager.zCounter);
     this.animateOpen();
+
+    // A resize changes the centred rest position, and can flip the page's
+    // scrollbar in or out — which alone is enough to move the window half a
+    // device pixel (see alignToDevicePixels). Moving the browser to a screen
+    // at a different scale fires this too.
+    window.addEventListener("resize", this.onViewportChange);
   }
+
+  private onViewportChange = () => {
+    if (this.isDragging) return;
+    this.alignToDevicePixels();
+  };
 
   private build(): HTMLElement {
     const d = this.data;
@@ -605,18 +616,64 @@ class BrowserWindow {
       onMove: (dx, dy) => {
         this.x = startX + dx;
         this.y = startY + dy;
-        this.applyPosition();
+        // Skip the device-pixel align on every move — it forces a layout read
+        // per mousemove, and nothing is scrolling mid-drag anyway. onEnd
+        // re-seats the window on the grid once the user lets go.
+        this.applyPosition(false);
       },
       onEnd: () => {
         this.isDragging = false;
         this.node.classList.remove("dragging");
+        this.alignToDevicePixels();
       },
     });
   }
 
-  private applyPosition() {
+  private applyPosition(align = true) {
     this.node.style.setProperty("--rest-x", `${this.x}px`);
     this.node.style.setProperty("--rest-y", `${this.y}px`);
+    if (align) this.alignToDevicePixels();
+  }
+
+  /**
+   * Seat the window's border box on whole device pixels.
+   *
+   * `left/top: 50%` + `translate(-50%)` centres the window against the initial
+   * containing block, which excludes the page's scrollbar. On a display at a
+   * fractional DPR (Windows at 125% → 1.25) that block is an odd number of
+   * DEVICE pixels wide whenever the page behind is showing its scrollbar, so
+   * 50% of it lands on a half device pixel: at 1536 CSS px × 1.25, left:50%
+   * resolves to 762.8px = 953.5 device px. Every descendant inherits that
+   * half-pixel phase.
+   *
+   * That is what makes a case study look like it comes apart while you scroll.
+   * Most of the window rasters on one pixel phase, but children that sit in
+   * their own compositing layer (the sticky TOC, anything under a filter)
+   * raster on their own, and the two re-raster at different moments as the
+   * scroll offset drifts. On a whole-pixel phase the disagreement is
+   * invisible; on a half-pixel phase it surfaces as a 1px shift that appears,
+   * lingers, then snaps back — the before/after tags and the remote's screen
+   * appearing to lag behind the image they sit on.
+   *
+   * Hide the page scrollbar and the same window lands on 768px, dead on the
+   * grid, and the artefact goes. That is also why it is intermittent: whether
+   * it bites depends on the viewport width and on whether the page behind
+   * happens to be scrollable at the time.
+   */
+  private alignToDevicePixels() {
+    const dpr = window.devicePixelRatio || 1;
+    if (dpr === 1) return;
+    // Always measure from the UNSNAPPED position, so calling this repeatedly
+    // (drag end, resize, animation end) re-derives the same answer instead of
+    // compounding one correction onto another.
+    this.node.style.setProperty("--rest-x", `${this.x}px`);
+    this.node.style.setProperty("--rest-y", `${this.y}px`);
+    // Reading the rect flushes the reset above.
+    const r = this.node.getBoundingClientRect();
+    const dx = Math.round(r.left * dpr) / dpr - r.left;
+    const dy = Math.round(r.top * dpr) / dpr - r.top;
+    if (dx) this.node.style.setProperty("--rest-x", `${this.x + dx}px`);
+    if (dy) this.node.style.setProperty("--rest-y", `${this.y + dy}px`);
   }
 
   /** Point --src-x/--src-y/--src-scale at the source card's current rect. */
@@ -641,11 +698,16 @@ class BrowserWindow {
       this.node.classList.add("is-opening");
       this.node.addEventListener("animationend", () => {
         this.node.classList.remove("is-opening");
+        // The window is sized by its content, so its height (and with it the
+        // centred top edge) can still settle as images finish loading. Re-seat
+        // it on the device grid once it is at rest.
+        this.alignToDevicePixels();
       }, { once: true });
     });
   }
 
   close() {
+    window.removeEventListener("resize", this.onViewportChange);
     this.node.remove();
     this.lightbox?.remove();
   }
@@ -681,6 +743,10 @@ class BrowserWindow {
     }
     this.node.style.display = "";
     this.node.classList.remove("is-minimized");
+    // A display:none window measures as a zero rect, so any resize that
+    // happened while it was docked couldn't re-seat it. Now that it has a box
+    // again, put it back on the device grid before it animates in.
+    this.alignToDevicePixels();
     this.node.classList.add("is-restoring");
     WindowManager.zCounter += 1;
     this.node.style.zIndex = String(WindowManager.zCounter);
@@ -697,15 +763,18 @@ class BrowserWindow {
       this.applyPosition();
       delete this.node.dataset.maxed;
     } else {
-      // The window is centered with left/top:50% + translate(-50%). For the
-      // centered position to land on whole pixels, the window's size must have
-      // the same parity as the viewport — otherwise it sits on a half-pixel and
-      // internal seams (e.g. address bar / sticky TOC) round to a 1px gap.
-      const vw = window.innerWidth, vh = window.innerHeight;
-      let w = Math.min(vw - 24, 1100);
-      let h = vh - 24;
-      if ((w & 1) !== (vw & 1)) w -= 1;
-      if ((h & 1) !== (vh & 1)) h -= 1;
+      // Size the window to a whole number of DEVICE pixels. applyPosition()
+      // seats the top-left on the device grid; rounding the size puts the far
+      // edges there too, so internal seams (address bar, sticky TOC, status
+      // bar) can't round to a 1px gap. This replaces an older CSS-pixel parity
+      // trick, which matched the window's parity to window.innerWidth — the
+      // wrong basis twice over: innerWidth includes the scrollbar that the
+      // centring's containing block excludes, and whole CSS pixels are not
+      // whole device pixels once the display is scaled to a fractional DPR.
+      const dpr = window.devicePixelRatio || 1;
+      const toDeviceGrid = (v: number) => Math.floor(v * dpr) / dpr;
+      const w = toDeviceGrid(Math.min(window.innerWidth - 24, 1100));
+      const h = toDeviceGrid(window.innerHeight - 24);
       this.node.style.width = `${w}px`;
       this.node.style.height = `${h}px`;
       this.x = 0; this.y = 0;
@@ -740,32 +809,57 @@ class BrowserWindow {
       videos.forEach((v) => io.observe(v));
     }
 
+    // Lift the jump strip OUT of the scroller, into the window chrome.
+    //
+    // It used to be `position: sticky` as the first child of the case study.
+    // That bought nothing: it is flush with the top of the scroller at
+    // scrollTop 0 and pinned at every offset after, so it never actually
+    // moved. It cost a great deal, though. A sticky element inside a
+    // composited scroller forces Chrome to position the content it can overlap
+    // on the main thread rather than on the compositor, one commit behind the
+    // scroll. The result is that unrelated things — the before/after tags, the
+    // remote's screen — slide along at the right speed but trail the content
+    // they are painted on, by enough to read as half a second of lag. The main
+    // thread is not even busy while it happens; it is a compositing split, not
+    // a performance problem.
+    //
+    // As a static sibling above .win-body it renders identically (it was never
+    // anywhere else on screen) and there is no sticky element left to fall
+    // behind. It is display:none on mobile either way.
+    const toc = cs.querySelector<HTMLElement>(".cs-toc");
+    if (toc) body.insertAdjacentElement("beforebegin", toc);
+
+    // Offset of `el`'s top edge from the top edge of the scroller's viewport.
+    // Measured from rects rather than offsetTop: .win carries a transform, so
+    // it is every case-study child's offsetParent and offsetTop is relative to
+    // the window — chrome included — not to the scrolled content.
+    const topInView = (el: HTMLElement, bodyTop: number) =>
+      el.getBoundingClientRect().top - bodyTop;
+
     // TOC scroll-jumps (anchor links scroll the body, not the page)
-    cs.querySelectorAll<HTMLAnchorElement>("[data-cs-jump]").forEach((link) => {
+    const tocLinks = Array.from((toc ?? cs).querySelectorAll<HTMLAnchorElement>("[data-cs-jump]"));
+    tocLinks.forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const target = cs.querySelector<HTMLElement>(link.getAttribute("href")!);
         if (!target) return;
-        const toc = cs.querySelector<HTMLElement>(".cs-toc");
-        const tocH = toc ? toc.getBoundingClientRect().height : 0;
-        const offsetTop = target.offsetTop - tocH - 8;
-        body.scrollTo({ top: offsetTop, behavior: "smooth" });
+        const delta = topInView(target, body.getBoundingClientRect().top);
+        body.scrollTo({ top: body.scrollTop + delta - 8, behavior: "smooth" });
       });
     });
 
     // Highlight current section in TOC as we scroll. Coalesce scroll events
     // into one layout-reading pass per animation frame.
-    const toc = cs.querySelector<HTMLElement>(".cs-toc");
     const sections = Array.from(cs.querySelectorAll<HTMLElement>(".cs-section, .cs-hero"));
-    const tocLinks = Array.from(cs.querySelectorAll<HTMLAnchorElement>("[data-cs-jump]"));
     const linkFor = (id: string) => tocLinks.find((l) => l.getAttribute("href") === "#" + id);
     let activeId: string | null = null;
     const updateActive = () => {
-      const tocH = toc ? toc.getBoundingClientRect().height : 0;
-      const probe = body.scrollTop + tocH + 24;
+      // The strip no longer overlays the content, so a section counts as
+      // current once its top reaches 24px below the scroller's top edge.
+      const bodyTop = body.getBoundingClientRect().top;
       let current: string | null = null;
       for (const s of sections) {
-        if (s.offsetTop <= probe) current = s.id || null;
+        if (topInView(s, bodyTop) <= 24) current = s.id || null;
       }
       if (current !== activeId) {
         activeId = current;
@@ -1272,8 +1366,10 @@ class HomeWindow {
       for (const key of projectKeys) {
         const open = WindowManager.openWindows.get(key);
         const mini = WindowManager.minimized.get(key);
-        if (open) { open.node.remove(); WindowManager.openWindows.delete(key); }
-        if (mini) { mini.node.remove(); WindowManager.minimized.delete(key); }
+        // close() (not node.remove()) so the window also drops its lightbox
+        // and its resize listener.
+        if (open) { open.close(); WindowManager.openWindows.delete(key); }
+        if (mini) { mini.close(); WindowManager.minimized.delete(key); }
         TabBar.removeProjectTab(key);
       }
       TabBar.setActive("home");
