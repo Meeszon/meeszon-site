@@ -1558,6 +1558,12 @@ body.no-shadows .portrait-frame {
   .lightbox-img { max-width: calc(100vw - 24px); }
   .lightbox-img,
   .lightbox-pair img { max-height: calc(100vh - 180px); }
+  /* dvh, where supported, so a visible URL bar shrinks the image rather than
+     pushing the arrows and the badge past the edges of the screen. */
+  @supports (height: 100dvh) {
+    .lightbox-img,
+    .lightbox-pair img { max-height: calc(100dvh - 180px); }
+  }
   .lightbox-pair { gap: 12px; }
   .lightbox-pair img { max-width: calc((100vw - 36px) / 2); }
 
@@ -1570,19 +1576,6 @@ body.no-shadows .portrait-frame {
   }
   .lightbox-prev { left: 50%; right: auto; margin-left: -48px; }
   .lightbox-next { left: 50%; right: auto; margin-left: 8px; }
-
-  /* "Before redesign" badge: tuck it under the image, smaller. */
-  .lightbox-badge {
-    bottom: auto;
-    top: calc(100% + 12px);
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 11px;
-    letter-spacing: 1.2px;
-    padding: 5px 11px;
-    gap: 6px;
-  }
-  .lightbox-badge::before { width: 7px; height: 7px; }
 }
 
 @media (max-width: 500px) {
@@ -3461,6 +3454,29 @@ body.home-windowed .home-window.is-home-restoring {
   color: #e8d6d2;
   background: #7e342b;
   border: 1px solid rgba(232, 214, 210, 0.25);
+}
+
+/* Mobile has to live right here, after the base rule: an override in the
+   max-width: 640px block further up the file loses the cascade to it (same
+   specificity, later wins) and never applies.
+   On a narrow screen the strip above the image belongs to the nav arrows, and
+   a tall image can push it off the top of the screen entirely -- so the badge
+   sits on the image's own top-left corner, where it can't be covered or
+   clipped. */
+@media (max-width: 640px) {
+  .lightbox-badge {
+    bottom: auto;
+    top: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    gap: 6px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(10, 8, 6, 0.45);
+  }
+  .lightbox-badge::before { width: 7px; height: 7px; }
 }
 
 @container (max-width: 620px) {
